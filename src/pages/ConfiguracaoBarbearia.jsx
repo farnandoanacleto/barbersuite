@@ -1019,12 +1019,12 @@ function ModalEquipe({membro, onSave, onClose}) {
 
 // ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
 const ABAS = [
-  { key:'servicos', icon:'✂️', label:'Serviços',       section:'Configuração' },
-  { key:'planos',   icon:'♛', label:'Planos do clube', section:null },
-  { key:'equipe',   icon:'👥', label:'Equipe',          section:null },
-  { key:'perfil',   icon:'🏠', label:'Perfil',          section:null },
-  { key:'automacoes', icon:'🤖', label:'Automação',       section:'Sistema' },
-  { key:'billing',  icon:'💳', label:'Assinatura SaaS', section:null },
+  { key:'servicos', icon:'', label:'Serviços',       section:'Configuração' },
+  { key:'planos',   icon:'', label:'Planos do clube', section:null },
+  { key:'equipe',   icon:'', label:'Equipe',          section:null },
+  { key:'perfil',   icon:'', label:'Perfil',          section:null },
+  { key:'automacoes', icon:'', label:'Automação',       section:'Sistema' },
+  { key:'billing',  icon:'', label:'Assinatura SaaS', section:null },
 ];
 
 export default function ConfiguracaoBarbearia() {
@@ -1036,9 +1036,15 @@ export default function ConfiguracaoBarbearia() {
 
   useEffect(() => {
     async function carregarDados() {
-      // Carregar Perfil
-      const { data: pRows } = await supabase.from('barbearia_perfis').select('*').limit(1);
-      const pData = pRows?.[0];
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      // Carregar Perfil do usuário logado
+      const { data: pData } = await supabase.from('barbearia_perfis')
+        .select('*')
+        .eq('usuario_id', session.user.id)
+        .single();
+
       if (pData) {
         setPerfil({
            nome:               pData.nome || '',
@@ -1048,8 +1054,8 @@ export default function ConfiguracaoBarbearia() {
            endereco:           pData.endereco || '',
            descricao:          pData.descricao || '',
            cor_principal:      pData.cor_principal || '#B8973A',
-           horario_abertura:   pData.horario_abertura || '08:00',
-           horario_fechamento: pData.horario_fechamento || '19:00',
+           horario_abertura:   (pData.horario_abertura || '08:00').slice(0,5),
+           horario_fechamento: (pData.horario_fechamento || '19:00').slice(0,5),
            dias_funcionamento: pData.dias_funcionamento || ['seg','ter','qua','qui','sex','sab'],
         });
       }
