@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { createClient } from '@supabase/supabase-js';
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabase";
 
 function exportarCSV(dados, nomeArquivo) {
   if (!dados || dados.length === 0) { alert('Nenhum dado para exportar.'); return; }
