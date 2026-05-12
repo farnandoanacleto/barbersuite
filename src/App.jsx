@@ -66,7 +66,7 @@ const css = `
   .logo-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
   .logo-icon {
     width: 32px; height: 32px; border-radius: 8px;
-    background: var(--gold); display: flex; align-items: center;
+    background: red; display: flex; align-items: center;
     justify-content: center; font-size: 14px; color: var(--dark); font-weight: 700;
     font-family: 'Playfair Display', serif;
   }
