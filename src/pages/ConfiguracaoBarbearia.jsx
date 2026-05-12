@@ -902,7 +902,7 @@ function TabAutomacoes({ perfil }) {
       setSalvo(true);
       setTimeout(() => setSalvo(false), 3000);
     } else {
-      alert("Erro ao salvar configurações.");
+      console.error("Erro ao salvar configurações.");
     }
   };
 

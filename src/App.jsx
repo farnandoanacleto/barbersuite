@@ -66,7 +66,7 @@ const css = `
   .logo-mark { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
   .logo-icon {
     width: 32px; height: 32px; border-radius: 8px;
-    background: red; display: flex; align-items: center;
+    background: var(--gold); display: flex; align-items: center;
     justify-content: center; font-size: 14px; color: var(--dark); font-weight: 700;
     font-family: 'Playfair Display', serif;
   }
@@ -1546,7 +1546,6 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setLogado(true);
     });
-    alert("SISTEMA ATUALIZADO - Verificando seu perfil...");
   }, []);
 
   useEffect(()=>{
@@ -1587,7 +1586,6 @@ export default function App() {
           setPerfil(p => ({...p, ...created}));
         } else {
           console.error("Erro crítico ao criar perfil:", err);
-          alert("Erro ao criar perfil no banco: " + (err?.message || "Erro desconhecido"));
           // Fallback para não travar a UI
           setPerfil(p => ({...p, id: 'temp-' + Date.now(), nome: nomeSugerido, usuario_id: session.user.id}));
         }
