@@ -74,7 +74,7 @@ const css = `
     font-family: 'Playfair Display', serif;
     color: var(--gold-light); font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
   }
-  .logo-tagline { font-size: 10px; color: rgba(255,255,255,0.28); letter-spacing: 1.8px; text-transform: uppercase; margin-left: 42px; }
+  .logo-tagline { font-size: 10px; color: rgba(255,255,255,0.28); letter-spacing: 1.8px; text-transform: uppercase; margin-top: 4px; }
 
   .nav { flex: 1; padding: 14px 0; overflow-y: auto; }
   .nav-section {
@@ -82,7 +82,7 @@ const css = `
     color: rgba(255,255,255,0.22); padding: 10px 20px 5px;
   }
   .nav-item {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center;
     padding: 9px 20px; cursor: pointer;
     font-size: 13px; color: rgba(255,255,255,0.5);
     border-left: 2px solid transparent;
@@ -90,7 +90,7 @@ const css = `
   }
   .nav-item:hover { color: rgba(255,255,255,0.82); background: rgba(255,255,255,0.04); }
   .nav-item.active { color: var(--gold-light); border-left-color: var(--gold); background: rgba(184,151,58,0.1); }
-  .nav-icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-icon { display: none; }
   .nav-badge {
     margin-left: auto; background: var(--red); color: #fff;
     font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600;
@@ -1524,7 +1524,7 @@ const navItems = [
 ];
 
 const initPerfil = {
-  nome:'Minha Barbearia',
+  nome:'Carregando...',
   slug:'barbearia',
   telefone:'',
   email:'',

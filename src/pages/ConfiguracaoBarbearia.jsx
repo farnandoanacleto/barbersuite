@@ -30,10 +30,10 @@ const css = `
   .cfg-logo-sub { font-size: 9px; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
   .cfg-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
   .cfg-nav-section { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.2); padding: 8px 18px 4px; }
-  .cfg-nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 18px; cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.5); border-left: 2px solid transparent; transition: all 0.15s; }
+  .cfg-nav-item { display: flex; align-items: center; padding: 9px 18px; cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.5); border-left: 2px solid transparent; transition: all 0.15s; }
   .cfg-nav-item:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.04); }
   .cfg-nav-item.active { color: var(--gold-l); border-left-color: var(--gold); background: rgba(184,151,58,0.1); }
-  .cfg-nav-icon { font-size: 14px; width: 18px; text-align: center; }
+  .cfg-nav-icon { display: none; }
   .cfg-user { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 9px; }
   .cfg-user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--dark); flex-shrink: 0; }
   .cfg-user-name { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 500; }
