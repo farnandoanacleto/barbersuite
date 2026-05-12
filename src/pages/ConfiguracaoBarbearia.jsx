@@ -151,23 +151,6 @@ const css = `
 // ─── DADOS MOCK ───────────────────────────────────────────────────────────────
 const CATEGORIAS = ['corte','barba','skincare','combo','outro'];
 
-const initServicos = [];
-
-const initPlanos = [];
-
-const initPerfil = {
-  nome: 'Minha Barbearia',
-  slug: 'barbearia',
-  telefone: '',
-  email: '',
-  endereco: '',
-  descricao: '',
-  cor_principal: '#B8973A',
-  horario_abertura: '08:00',
-  horario_fechamento: '19:00',
-  dias_funcionamento: ['seg','ter','qua','qui','sex','sab'],
-};
-
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const R = (v) => `R$${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
 const catClass = (c) => `categoria-pill cat-${c}`;
@@ -1039,6 +1022,10 @@ const ABAS = [
   { key:'automacoes', icon:'', label:'Automação',       section:'Sistema' },
   { key:'billing',  icon:'', label:'Assinatura SaaS', section:null },
 ];
+
+const initServicos = [];
+const initPlanos = [];
+const initEquipe = [];
 
 export default function ConfiguracaoBarbearia() {
   const [aba, setAba] = useState('servicos');
