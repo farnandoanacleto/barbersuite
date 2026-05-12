@@ -61,7 +61,7 @@ const css = `
 `;
 
 export default function AuthBarbearia({ onLogin }) {
-  const [modo, setModo] = useState("login"); // login | cadastro
+  const [modo, setModo] = useState("login"); // login | cadastro | recuperar
   const [etapa, setEtapa] = useState(1);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -101,6 +101,22 @@ export default function AuthBarbearia({ onLogin }) {
       setErro("Erro no login: " + error.message);
     } else {
       if (onLogin) onLogin(data.user);
+    }
+  };
+
+  const handleRecuperarSenha = async () => {
+    if (!loginEmail) { setErro("Informe seu e-mail para recuperar a senha."); return; }
+    setLoading(true); setErro(""); setSucesso("");
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+      redirectTo: window.location.origin,
+    });
+
+    setLoading(false);
+    if (error) {
+      setErro("Erro ao enviar e-mail: " + error.message);
+    } else {
+      setSucesso("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
     }
   };
 
@@ -206,8 +222,38 @@ export default function AuthBarbearia({ onLogin }) {
               <button className="btn-primary" onClick={handleLogin} disabled={loading}>
                 {loading ? "Entrando..." : "Entrar"}
               </button>
+              <div style={{textAlign:'center', marginTop:12}}>
+                <span className="text-muted" style={{fontSize:12, cursor:'pointer'}} onClick={() => { setModo("recuperar"); setErro(""); setSucesso(""); }}>Esqueci a senha</span>
+              </div>
               <div className="switch-link">
                 Ainda não tem conta? <span onClick={() => { setModo("cadastro"); setErro(""); setEtapa(1); }}>Criar conta grátis</span>
+              </div>
+            </>
+          )}
+
+          {/* RECUPERAR SENHA */}
+          {modo === "recuperar" && (
+            <>
+              <div className="auth-title">Recuperar senha</div>
+              <div className="auth-sub">Enviaremos um link para o seu e-mail</div>
+              {erro && <div className="error-box">{erro}</div>}
+              {sucesso && <div className="success-box">{sucesso}</div>}
+              
+              {!sucesso && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">E-mail da conta</label>
+                    <input className="form-input" type="email" placeholder="seu@email.com"
+                      value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+                  </div>
+                  <button className="btn-primary" onClick={handleRecuperarSenha} disabled={loading}>
+                    {loading ? "Enviando..." : "Enviar link de recuperação"}
+                  </button>
+                </>
+              )}
+
+              <div className="switch-link">
+                <span onClick={() => { setModo("login"); setErro(""); setSucesso(""); }}>← Voltar para o login</span>
               </div>
             </>
           )}
