@@ -408,99 +408,7 @@ const css = `
   .text-amber { color: var(--amber); }
 `;
 
-const barbeiros = [
-  { id: 1, nome: "Rafael M.", atendimentos: 6, meta: 12000, faturamento: 11200, ticket: 123, retencao: 91, clubes: 5 },
-  { id: 2, nome: "Thiago S.", atendimentos: 5, meta: 12000, faturamento: 9800, ticket: 117, retencao: 82, clubes: 2 },
-  { id: 3, nome: "Bruno K.", atendimentos: 7, meta: 13000, faturamento: 12400, ticket: 127, retencao: 94, clubes: 3 },
-  { id: 4, nome: "Lucas P.", atendimentos: 4, meta: 12000, faturamento: 7880, ticket: 109, retencao: 74, clubes: 2 },
-];
-
-const clientes = [
-  {
-    id: 1, iniciais: "CF", nome: "Carlos Ferreira", plano: "Clube Black", planoKey: "black",
-    telefone: "(41) 99876-5432", email: "carlos.f@email.com", aniversario: "15 de abril",
-    visitas: 47, ticket: 312, frequencia: "8/mes", nps: 9.8, desde: "Mar/2024", diasAtras: 5,
-    corte: ["Fade medio", "Lateral fechada", "Topo texturizado"],
-    barba: ["Degrade na barba", "Contorno reto", "Hidratante barba"],
-    extras: ["Terapia facial", "Sobrancelha", "Skincare luxo"],
-    obs: "Prefere Rafael. Gosta de papo sobre futebol. Alergico a mentol. Sempre aceita skincare. Aniversario em abril.",
-    historico: [
-      { data: "26 Mar 2026", svc: "Corte Fade + Barba + Skincare Luxo", barb: "Rafael M.", valor: 320, avaliacao: 5 },
-      { data: "19 Mar 2026", svc: "Barba modelada + Sobrancelha", barb: "Rafael M.", valor: 180 },
-      { data: "12 Mar 2026", svc: "Corte completo + Terapia facial", barb: "Rafael M.", valor: 290, indicou: "Pedro R." },
-      { data: "05 Mar 2026", svc: "Barba + Hidratacao capilar", barb: "Rafael M.", valor: 220 },
-    ],
-  },
-  {
-    id: 2, iniciais: "JV", nome: "Joao Vieira", plano: "Combo", planoKey: "combo",
-    telefone: "(41) 98765-4321", email: "joao.v@email.com", aniversario: "3 de julho",
-    visitas: 31, ticket: 195, frequencia: "6/mes", nps: 9.1, desde: "Jan/2025", diasAtras: 3,
-    corte: ["Degrade baixo", "Franja longa"], barba: ["Natural", "Oleo de barba"],
-    extras: ["Sobrancelha"], obs: "Veio 6x este mes - candidato a upgrade para Clube Black.",
-    historico: [
-      { data: "28 Mar 2026", svc: "Corte + Barba luxo", barb: "Bruno K.", valor: 200 },
-      { data: "21 Mar 2026", svc: "Corte premium", barb: "Bruno K.", valor: 140 },
-    ],
-  },
-  {
-    id: 3, iniciais: "FM", nome: "Felipe Martins", plano: "Clube Black", planoKey: "black",
-    telefone: "(41) 97654-3210", email: "felipe.m@email.com", aniversario: "22 de outubro",
-    visitas: 39, ticket: 280, frequencia: "5/mes", nps: 9.4, desde: "Ago/2024", diasAtras: 8,
-    corte: ["Undercut", "Franja caida"], barba: ["Cavanhaque definido"],
-    extras: ["Skincare facial"], obs: "Pontual. Prefere horarios matutinos. Indicou 3 amigos.",
-    historico: [
-      { data: "23 Mar 2026", svc: "Corte + Skincare facial", barb: "Thiago S.", valor: 290 },
-      { data: "14 Mar 2026", svc: "Corte completo", barb: "Thiago S.", valor: 150 },
-    ],
-  },
-  {
-    id: 4, iniciais: "RL", nome: "Roberto Lima", plano: "Corte", planoKey: "corte",
-    telefone: "(41) 96543-2109", email: "roberto.l@email.com", aniversario: "8 de dezembro",
-    visitas: 9, ticket: 80, frequencia: "1/mes", nps: 7.5, desde: "Jun/2025", diasAtras: 28,
-    corte: ["Classico", "Lateral curta"], barba: [], extras: [],
-    obs: "Sem visita ha 28 dias. Score de churn alto. Recomendado contato ativo.",
-    historico: [
-      { data: "03 Mar 2026", svc: "Corte classico", barb: "Lucas P.", valor: 80 },
-    ],
-  },
-];
-
-const agendamentos = [
-  { barb: 0, hora: "08:00", cliente: "Carlos F.", svc: "Corte + Barba", tipo: "gold", plano: "Black", dia: "Ter" },
-  { barb: 2, hora: "08:00", cliente: "Marcos A.", svc: "Corte Premium", tipo: "green", dia: "Ter" },
-  { barb: 1, hora: "09:00", cliente: "Joao V.", svc: "Barba Luxo", tipo: "gold", plano: "Clube", dia: "Ter" },
-  { barb: 2, hora: "09:00", cliente: "Andre L.", svc: "Hidratacao", tipo: "blue", dia: "Ter" },
-  { barb: 0, hora: "10:00", cliente: "Pedro R.", svc: "Fade + Sobrancelha", tipo: "blue", dia: "Ter" },
-  { barb: 3, hora: "10:00", cliente: "Felipe M.", svc: "Corte Classico", tipo: "gold", plano: "Black", dia: "Ter" },
-  { barb: 1, hora: "11:00", cliente: "Rodrigo C.", svc: "Corte + Barba", tipo: "green", dia: "Ter" },
-  { barb: 2, hora: "11:00", cliente: "Lucas B.", svc: "Skincare + Corte", tipo: "gold", plano: "Black", dia: "Ter" },
-  { barb: 0, hora: "13:00", cliente: "Gabriel N.", svc: "Corte Juvenil", tipo: "green", dia: "Ter" },
-  { barb: 2, hora: "13:00", cliente: "Henrique S.", svc: "Barba Modelada", tipo: "blue", dia: "Ter" },
-  { barb: 3, hora: "13:00", cliente: "Victor A.", svc: "Corte + Barba", tipo: "gold", plano: "Clube", dia: "Ter" },
-];
-
 const horasGrid = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
-
-const listaEspera = [
-  { iniciais: "WF", nome: "William F.", svc: "Corte + Barba", barb: "Rafael M.", tempo: "~20min" },
-  { iniciais: "DM", nome: "Daniel M.", svc: "Fade", barb: "Qualquer", tempo: "~45min" },
-  { iniciais: "RS", nome: "Rafael S.", svc: "Barba", barb: "Bruno K.", tempo: "~60min" },
-];
-
-const planos = [
-  { nome: "Corte", preco: 89, membros: 38, features: "4 cortes/mes\n1 barbeiro fixo\nPrioridade agenda" },
-  { nome: "Barba", preco: 69, membros: 22, features: "Barba ilimitada\nProdutos exclusivos\nPrioridade agenda" },
-  { nome: "Combo", preco: 139, membros: 51, features: "4 cortes + barba ilim.\nSkincare mensal\nDesconto extras 10%" },
-  { nome: "Clube Black", preco: 249, membros: 36, features: "Ilimitado tudo\nPrioritario 24h\nEventos networking\nSkincare + extras", featured: true },
-];
-
-const membrosClube = [
-  { nome: "Joao Vieira", plano: "Combo", badge: "badge-gray", desde: "Jan 2025", uso: 6, max: 4, score: "upgrade", scoreLabel: "Upgrade", status: "badge-green", statusLabel: "Ativo" },
-  { nome: "Carlos Ferreira", plano: "Clube Black", badge: "badge-gold", desde: "Mar 2024", uso: 8, max: null, score: "alto", scoreLabel: "Alto", status: "badge-green", statusLabel: "Ativo" },
-  { nome: "Roberto Lima", plano: "Corte", badge: "badge-gray", desde: "Jun 2025", uso: 1, max: 4, score: "risco", scoreLabel: "Risco", status: "badge-red", statusLabel: "Alerta" },
-  { nome: "Felipe Martins", plano: "Clube Black", badge: "badge-gold", desde: "Ago 2024", uso: 5, max: null, score: "alto", scoreLabel: "Alto", status: "badge-green", statusLabel: "Ativo" },
-  { nome: "Andre Costa", plano: "Barba", badge: "badge-gray", desde: "Nov 2025", uso: 0, max: null, score: "churn", scoreLabel: "Churn", status: "badge-red", statusLabel: "Alerta" },
-];
 
 function Badge({ tipo, children }) {
   return <span className={`badge badge-${tipo}`}>{children}</span>;
@@ -664,6 +572,7 @@ function PageAgenda({ perfil }) {
   const [diaSelecionado, setDiaSelecionado] = useState("Ter");
   const [agendamentosDB, setAgendamentosDB] = useState([]);
   const [profissionaisDB, setProfissionaisDB] = useState([]);
+  const [listaEspera, setListaEspera] = useState([]); // Agora dinâmico
   const dias = ["Seg","Ter","Qua","Qui","Sex","Sab"];
 
   useEffect(() => {
@@ -681,7 +590,11 @@ function PageAgenda({ perfil }) {
     supabase.from('profissionais')
       .select('id, usuario_id, especialidade, meta_mensal, cor_agenda, usuarios:usuario_id(id, nome)')
       .eq('ativo', true)
-      .then(({ data, error }) => { if (!error && data && data.length > 0) setProfissionaisDB(data); });
+      .then(({ data, error }) => { if (!error && data) setProfissionaisDB(data); });
+      
+    // Buscar lista de espera
+    supabase.from('lista_espera').select('*').eq('atendido', false)
+      .then(({ data }) => { if (data) setListaEspera(data); });
   }, []);
 
   const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
@@ -689,27 +602,24 @@ function PageAgenda({ perfil }) {
 
   function gerarHorarios(abertura, fechamento) {
     const horarios = [];
-    const [hIni] = abertura.split(':').map(Number);
-    const [hFim] = fechamento.split(':').map(Number);
+    const [hIni] = (abertura || '08:00').split(':').map(Number);
+    const [hFim] = (fechamento || '19:00').split(':').map(Number);
     for (let h = hIni; h <= hFim; h++) horarios.push(`${String(h).padStart(2,'0')}:00`);
     return horarios;
   }
 
   const HORARIOS = gerarHorarios(perfil?.horario_abertura||'08:00', perfil?.horario_fechamento||'19:00');
-  const agendamentosHoje = agendamentos.filter(a => a.dia === diaSelecionado);
-  const getAppt = (barbIdx, hora) => {
-    const mock = agendamentosHoje.find(a => a.barb === barbIdx && a.hora === hora);
-    if (mock) return mock;
+  
+  const getAppt = (barbId, hora) => {
     const diasMap = { Seg: 1, Ter: 2, Qua: 3, Qui: 4, Sex: 5, Sab: 6 };
     const hoje = new Date();
     const diffDias = diasMap[diaSelecionado] - hoje.getDay();
     const dataAlvo = new Date(hoje);
     dataAlvo.setDate(hoje.getDate() + diffDias);
     const dataStr = dataAlvo.toISOString().split('T')[0];
-    const profNome = profissionaisDB[barbIdx]?.usuarios?.nome || barbeiros[barbIdx]?.nome;
+    
     const db = agendamentosDB.find(a =>
-      a.hora === hora && a.dia === dataStr &&
-      (a.barbeiro_nome === profNome || a.barbeiro_nome === barbeiros[barbIdx]?.nome)
+      a.hora === hora && a.dia === dataStr && a.profissionais_id === barbId
     );
     if (!db) return null;
     return { cliente: db.cliente_nome, svc: db.servico_nome || db.servico, tipo: 'blue', plano: null };
@@ -720,11 +630,10 @@ function PageAgenda({ perfil }) {
       <div className="topbar">
         <div>
           <div className="page-heading">Agenda inteligente</div>
-          <div className="page-sub">Terca-feira, 31 de marco de 2026</div>
+          <div className="page-sub">Selecione um dia e barbeiro</div>
         </div>
         <div className="topbar-right">
-          <button className="btn btn-outline">Filtrar</button>
-          <button className="btn btn-primary" onClick={() => { setSlotSelecionado({hora:'09:00',barbeiro:{nome:'Qualquer barbeiro'}}); setModalAberto(true); }}>+ Novo agendamento</button>
+          <button className="btn btn-primary" onClick={() => { setSlotSelecionado({hora:'09:00',barbeiro:null}); setModalAberto(true); }}>+ Novo agendamento</button>
         </div>
       </div>
 
@@ -733,9 +642,7 @@ function PageAgenda({ perfil }) {
           <div>
             <div className="cal-toolbar">
               <div className="cal-nav">
-                <button className="cal-nav-btn">&#8249;</button>
-                <span className="cal-month">Marco 2026</span>
-                <button className="cal-nav-btn">&#8250;</button>
+                <span className="cal-month">Agenda Semanal</span>
               </div>
               <div className="day-pills">
                 {dias.map(d => (
@@ -743,82 +650,59 @@ function PageAgenda({ perfil }) {
                 ))}
               </div>
             </div>
-            <div className="schedule-grid">
+            <div className="schedule-grid" style={{ gridTemplateColumns: `80px repeat(${profissionaisDB.length || 1}, 1fr)` }}>
               <div className="sg-header" />
-              {barbeiros.map(b => (
-                <div key={b.id} className="sg-header">
-                  <div className="sg-barber">{b.nome}</div>
-                  <div className="sg-slots">{b.atendimentos} hoje</div>
+              {profissionaisDB.map(p => (
+                <div key={p.id} className="sg-header">
+                  <div className="sg-barber">{p.usuarios?.nome || 'Profissional'}</div>
+                  <div className="sg-slots">{p.especialidade}</div>
                 </div>
               ))}
+              {profissionaisDB.length === 0 && <div className="sg-header"><div className="sg-barber">Nenhum barbeiro ativo</div></div>}
+              
               {HORARIOS.map(hora => (
                 <Fragment key={hora}>
                   <div className="sg-time">{hora}</div>
-                  {barbeiros.map((b,bi) => {
-                    const appt = getAppt(bi, hora);
+                  {profissionaisDB.map((p) => {
+                    const appt = getAppt(p.id, hora);
                     const isAlmoco = hora==="12:00";
                     return (
-                      <div key={`c-${bi}-${hora}`} className={`sg-cell ${!appt?"empty":""}`} style={isAlmoco?{background:"#FAFAF8"}:{}}
-                        onClick={()=>{ if(!appt&&!isAlmoco){ setSlotSelecionado({hora,barbeiro:b}); setModalAberto(true); } }}>
+                      <div key={`c-${p.id}-${hora}`} className={`sg-cell ${!appt?"empty":""}`} style={isAlmoco?{background:"#FAFAF8"}:{}}
+                        onClick={()=>{ if(!appt&&!isAlmoco){ setSlotSelecionado({hora,barbeiro:p}); setModalAberto(true); } }}>
                         {appt && (
                           <div className={`appt appt-${appt.tipo}`}>
                             <div className="appt-name">{appt.cliente}</div>
                             <div className="appt-svc">{appt.svc}</div>
-                            {appt.plano && <span className="badge badge-gold" style={{marginTop:3,fontSize:8}}>{appt.plano}</span>}
                           </div>
                         )}
                       </div>
                     );
                   })}
+                  {profissionaisDB.length === 0 && <div className="sg-cell empty"></div>}
                 </Fragment>
               ))}
             </div>
           </div>
 
           <div className="side-stack">
-            <AIBox text="Joao Vieira veio 6x este mes. Recomendar upgrade para Clube Black no proximo atendimento." />
             <div className="card">
               <div className="card-title">Resumo do dia</div>
-              {[
-                {label:"Confirmados",val:"18",color:""},
-                {label:"Pendentes",val:"3",color:"var(--amber)"},
-                {label:"Disponiveis",val:"7",color:"var(--green)"},
-                {label:"Faturamento prev.",val:"R$ 2.840",color:""},
-                {label:"No-shows hoje",val:"1",color:"var(--red)"},
-              ].map(r=>(
-                <div key={r.label} className="row-between" style={{padding:"7px 0",borderBottom:"1px solid var(--border)"}}>
-                  <span className="text-muted text-small">{r.label}</span>
-                  <span style={{fontSize:13,fontWeight:500,color:r.color||"var(--text)"}}>{r.val}</span>
-                </div>
-              ))}
+              <div style={{fontSize:12, color:'var(--muted)'}}>Dados reais baseados na agenda selecionada.</div>
             </div>
             <div className="card">
               <div className="section-row">
                 <div className="card-title" style={{marginBottom:0}}>Lista de espera</div>
-                <Badge tipo="gray">3 aguardando</Badge>
+                <Badge tipo="gray">{listaEspera.length} aguardando</Badge>
               </div>
+              {listaEspera.length === 0 && <div style={{padding:20, textAlign:'center', fontSize:12, color:'var(--muted)'}}>Vazia</div>}
               {listaEspera.map(w=>(
-                <div key={w.nome} className="wait-item">
-                  <div className="avatar avatar-gray">{w.iniciais}</div>
+                <div key={w.id} className="wait-item">
+                  <div className="avatar avatar-gray">{w.cliente_nome?.substring(0,2).toUpperCase()}</div>
                   <div style={{flex:1}}>
-                    <div className="wait-name">{w.nome}</div>
-                    <div className="wait-svc">{w.svc} · {w.barb}</div>
+                    <div className="wait-name">{w.cliente_nome}</div>
+                    <div className="wait-svc">{w.servico}</div>
                   </div>
-                  <span className="wait-time">{w.tempo}</span>
                   <button className="notify-btn" title="Notificar via WhatsApp">✉</button>
-                </div>
-              ))}
-            </div>
-            <div className="card">
-              <div className="card-title">Lembretes WhatsApp</div>
-              {[
-                {label:"Enviados hoje",val:"14 ✓",color:"var(--green)"},
-                {label:"Confirmados",val:"11/14",color:""},
-                {label:"Sem resposta",val:"3",color:"var(--amber)"},
-              ].map(r=>(
-                <div key={r.label} className="row-between" style={{padding:"6px 0",borderBottom:"1px solid var(--border)"}}>
-                  <span className="text-muted text-small">{r.label}</span>
-                  <span style={{fontSize:13,fontWeight:500,color:r.color||"var(--text)"}}>{r.val}</span>
                 </div>
               ))}
             </div>
@@ -830,7 +714,12 @@ function PageAgenda({ perfil }) {
         <ModalNovoAgendamento
           slot={slotSelecionado}
           onClose={()=>setModalAberto(false)}
-          onSalvar={(dados)=>{ console.log('Novo agendamento:',dados); setModalAberto(false); }}
+          onSalvar={()=>{ 
+            // Recarregar agendamentos
+            supabase.from('agendamentos').select('*')
+              .then(({ data }) => { if (data) setAgendamentosDB(data); });
+            setModalAberto(false); 
+          }}
         />
       )}
     </>
@@ -1635,12 +1524,12 @@ const navItems = [
 ];
 
 const initPerfil = {
-  nome:'Gran Cavalheiro',
-  slug:'gran-cavalheiro',
-  telefone:'(41) 99999-0000',
-  email:'contato@grancavalheiro.com.br',
-  endereco:'Rua das Barbearias, 123 - Curitiba/PR',
-  descricao:'Barbearia premium especializada em cortes modernos e tratamentos exclusivos.',
+  nome:'Minha Barbearia',
+  slug:'barbearia',
+  telefone:'',
+  email:'',
+  endereco:'',
+  descricao:'',
   cor_principal:'#B8973A',
   horario_abertura:'08:00',
   horario_fechamento:'19:00',
@@ -1688,10 +1577,10 @@ export default function App() {
         <div className="sidebar">
           <div className="sidebar-logo">
             <div className="logo-mark">
-              <div className="logo-icon">G</div>
-              <div className="logo-name">BarberFlow</div>
+              <div className="logo-icon">{perfil.nome?.substring(0,1).toUpperCase()}</div>
+              <div className="logo-name">{perfil.nome || 'BarberFlow'}</div>
             </div>
-            <div className="logo-tagline">Sistema de gestao</div>
+            <div className="logo-tagline">Sistema de Gestão</div>
           </div>
 
           <nav className="nav">
@@ -1717,9 +1606,9 @@ export default function App() {
           </nav>
 
           <div className="sidebar-user">
-            <div className="user-avatar">GC</div>
+            <div className="user-avatar">{perfil.nome?.substring(0,2).toUpperCase()}</div>
             <div>
-              <div className="user-name">BarberFlow</div>
+              <div className="user-name">{perfil.nome}</div>
               <div className="user-role">Administrador</div>
             </div>
           </div>

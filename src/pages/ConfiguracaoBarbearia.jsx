@@ -151,33 +151,20 @@ const css = `
 // ─── DADOS MOCK ───────────────────────────────────────────────────────────────
 const CATEGORIAS = ['corte','barba','skincare','combo','outro'];
 
-const initServicos = [
-  { id:1, nome:'Corte clássico',   categoria:'corte',    duracao:45, preco:60,  ativo:true  },
-  { id:2, nome:'Fade premium',     categoria:'corte',    duracao:60, preco:80,  ativo:true  },
-  { id:3, nome:'Barba luxo',       categoria:'barba',    duracao:30, preco:50,  ativo:true  },
-  { id:4, nome:'Corte + Barba',    categoria:'combo',    duracao:75, preco:120, ativo:true  },
-  { id:5, nome:'Skincare facial',  categoria:'skincare', duracao:45, preco:90,  ativo:true  },
-  { id:6, nome:'Combo Black',      categoria:'combo',    duracao:90, preco:180, ativo:true  },
-  { id:7, nome:'Sobrancelha',      categoria:'outro',    duracao:20, preco:30,  ativo:false },
-];
+const initServicos = [];
 
-const initPlanos = [
-  { id:1, nome:'Plano Corte',   preco:89,  visitas:4,    ilimitado:false, servicos:['corte'],          destaque:false, ativo:true  },
-  { id:2, nome:'Plano Barba',   preco:69,  visitas:null, ilimitado:true,  servicos:['barba'],          destaque:false, ativo:true  },
-  { id:3, nome:'Combo',         preco:139, visitas:4,    ilimitado:false, servicos:['corte','barba'],  destaque:false, ativo:true  },
-  { id:4, nome:'Clube Premium', preco:249, visitas:null, ilimitado:true,  servicos:['corte','barba','skincare','combo'], destaque:true, ativo:true },
-];
+const initPlanos = [];
 
 const initPerfil = {
-  nome: 'Gran Cavalheiro',
-  slug: 'gran-cavalheiro',
-  telefone: '(41) 99999-0000',
-  email: 'contato@grancavalheiro.com.br',
-  endereco: 'Rua das Barbearias, 123 — Curitiba/PR',
-  descricao: 'Barbearia premium especializada em cortes modernos e tratamentos exclusivos.',
+  nome: 'Minha Barbearia',
+  slug: 'barbearia',
+  telefone: '',
+  email: '',
+  endereco: '',
+  descricao: '',
   cor_principal: '#B8973A',
-  horario_abertura: '09:00',
-  horario_fechamento: '20:00',
+  horario_abertura: '08:00',
+  horario_fechamento: '19:00',
   dias_funcionamento: ['seg','ter','qua','qui','sex','sab'],
 };
 
@@ -1128,10 +1115,10 @@ export default function ConfiguracaoBarbearia() {
             })}
           </nav>
           <div className="cfg-user">
-            <div className="cfg-user-avatar">GC</div>
+            <div className="cfg-user-avatar">{perfil.nome?.substring(0,2).toUpperCase()}</div>
             <div>
-              <div className="cfg-user-name">Gran Cavalheiro</div>
-              <div className="cfg-user-role">Plano Pro</div>
+              <div className="cfg-user-name">{perfil.nome}</div>
+              <div className="cfg-user-role">Painel de Controle</div>
             </div>
           </div>
         </div>
