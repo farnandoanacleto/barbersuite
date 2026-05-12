@@ -1541,6 +1541,14 @@ export default function App() {
   const [page, setPage] = useState("agenda");
   const [perfil, setPerfil] = useState(initPerfil);
 
+  useEffect(() => {
+    // Verificar se já existe uma sessão ativa ao abrir o app
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setLogado(true);
+    });
+    alert("SISTEMA ATUALIZADO - Verificando seu perfil...");
+  }, []);
+
   useEffect(()=>{
     async function carregarPerfil() {
       const { data: { session } } = await supabase.auth.getSession();
