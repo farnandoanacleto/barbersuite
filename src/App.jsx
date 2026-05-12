@@ -1509,18 +1509,18 @@ function PageDashboard() {
 }
 
 const navItems = [
-  {key:"gestao",     label:"Gestão",           icon:"📅", section:"Principal"},
-  {key:"clube",     label:"Clube",             icon:"♛",  section:null},
-  {key:"crm",       label:"Clientes",          icon:"👥", badge:null, section:null},
-  {key:"comandas",  label:"Comandas",          icon:"🧾", section:null},
-  {key:"importador",label:"Importar clientes", icon:"📥", section:null},
-  {key:"estoque",   label:"Estoque",           icon:"📦", section:null},
-  {key:"dashboard", label:"Dashboard",         icon:"📊", section:null},
-  {key:"financeiro",label:"Financeiro",        icon:"💰", section:null},
+  {key:"gestao",     label:"Gestão",           icon:"", section:"Principal"},
+  {key:"clube",     label:"Clube",             icon:"",  section:null},
+  {key:"crm",       label:"Clientes",          icon:"", badge:null, section:null},
+  {key:"comandas",  label:"Comandas",          icon:"", section:null},
+  {key:"importador",label:"Importar clientes", icon:"", section:null},
+  {key:"estoque",   label:"Estoque",           icon:"", section:null},
+  {key:"dashboard", label:"Dashboard",         icon:"", section:null},
+  {key:"financeiro",label:"Financeiro",        icon:"", section:null},
   {key:"relatorios", label:"Relatórios", icon:"", section:null},
-  {key:"cliente",   label:"App Cliente",       icon:"📱", section:"Clientes"},
-  {key:"experiencia",label:"Experiência",      icon:"♡", section:null, disabled:true},
-  {key:"config",    label:"Configurações",     icon:"⚙", section:"Config"},
+  {key:"cliente",   label:"App Cliente",       icon:"", section:"Clientes"},
+  {key:"experiencia",label:"Experiência",      icon:"", section:null, disabled:true},
+  {key:"config",    label:"Configurações",     icon:"", section:"Config"},
 ];
 
 const initPerfil = {
@@ -1553,10 +1553,7 @@ export default function App() {
         .single();
 
       if(data) {
-        // Proteção: Se ainda estiver com o nome antigo no banco, não exibir para o cliente
-        const nomeReal = data.nome === 'Gran Cavalheiro' ? 'Minha Barbearia' : data.nome;
-        
-        setPerfil(p=>({...p, ...data, nome: nomeReal,
+        setPerfil(p=>({...p, ...data,
           horario_abertura:(data.horario_abertura||'08:00').slice(0,5),
           horario_fechamento:(data.horario_fechamento||'19:00').slice(0,5),
         }));
