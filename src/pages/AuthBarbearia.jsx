@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -89,10 +90,18 @@ export default function AuthBarbearia({ onLogin }) {
   const handleLogin = async () => {
     if (!loginEmail || !loginSenha) { setErro("Preencha e-mail e senha."); return; }
     setLoading(true); setErro("");
-    // Simulação — em produção: supabase.auth.signInWithPassword
-    await new Promise(r => setTimeout(r, 800));
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginSenha,
+    });
+
     setLoading(false);
-    if (onLogin) onLogin({ email: loginEmail });
+    if (error) {
+      setErro("Erro no login: " + error.message);
+    } else {
+      if (onLogin) onLogin(data.user);
+    }
   };
 
   const handleCadastroEtapa1 = () => {
@@ -106,13 +115,42 @@ export default function AuthBarbearia({ onLogin }) {
   const handleCadastroFinal = async () => {
     if (!cadSlug) { setErro("O slug é obrigatório."); return; }
     setLoading(true); setErro("");
-    // Simulação — em produção:
-    // 1. supabase.auth.signUp({ email, password })
-    // 2. supabase.rpc('fn_cadastrar_barbearia', { nome, email, slug, auth_id })
-    await new Promise(r => setTimeout(r, 1200));
+
+    // 1. Criar usuário no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: cadEmail,
+      password: cadSenha,
+      options: {
+        data: {
+          nome_barbearia: cadNome,
+          telefone: cadTelefone
+        }
+      }
+    });
+
+    if (authError) {
+      setLoading(false);
+      setErro("Erro ao criar conta: " + authError.message);
+      return;
+    }
+
+    // 2. Criar perfil da barbearia
+    const { error: profileError } = await supabase.from('barbearia_perfis').insert([{
+      usuario_id: authData.user.id,
+      nome: cadNome,
+      slug: cadSlug,
+      telefone: cadTelefone,
+      endereco: cadEndereco,
+      email: cadEmail
+    }]);
+
     setLoading(false);
-    setSucesso("Conta criada! Verifique seu e-mail para confirmar.");
-    setEtapa(3);
+    if (profileError) {
+      setErro("Conta criada, mas erro ao salvar perfil: " + profileError.message);
+    } else {
+      setSucesso("Conta criada com sucesso! Você já pode fazer login.");
+      setEtapa(3);
+    }
   };
 
   const features = [

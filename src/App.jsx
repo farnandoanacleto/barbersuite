@@ -1542,15 +1542,32 @@ export default function App() {
   const [perfil, setPerfil] = useState(initPerfil);
 
   useEffect(()=>{
-    supabase.from('barbearia_perfis').select('*').limit(1)
-      .then(({data})=>{
-        const row = data?.[0];
-        if(row) setPerfil(p=>({...p,...row,
-          horario_abertura:(row.horario_abertura||'08:00').slice(0,5),
-          horario_fechamento:(row.horario_fechamento||'19:00').slice(0,5),
+    async function carregarPerfil() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      // Buscar perfil vinculado ao usuário logado
+      const { data, error } = await supabase.from('barbearia_perfis')
+        .select('*')
+        .eq('usuario_id', session.user.id) // Filtro crítico para isolamento de dados
+        .single();
+
+      if(data) {
+        // Proteção: Se ainda estiver com o nome antigo no banco, não exibir para o cliente
+        const nomeReal = data.nome === 'Gran Cavalheiro' ? 'Minha Barbearia' : data.nome;
+        
+        setPerfil(p=>({...p, ...data, nome: nomeReal,
+          horario_abertura:(data.horario_abertura||'08:00').slice(0,5),
+          horario_fechamento:(data.horario_fechamento||'19:00').slice(0,5),
         }));
-      });
-  },[]);
+      } else {
+        // Se não encontrar perfil específico, tenta carregar o primeiro disponível (apenas para admins globais)
+        // ou mantém o initPerfil
+        console.log("Perfil não encontrado para este usuário, usando padrão.");
+      }
+    }
+    carregarPerfil();
+  }, [logado]);
 
   if(!logado) return <AuthBarbearia onLogin={()=>setLogado(true)} />;
 
