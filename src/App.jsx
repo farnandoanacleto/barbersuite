@@ -1579,8 +1579,9 @@ export default function App() {
           setPerfil(p => ({...p, ...created}));
         } else {
           console.error("Erro crítico ao criar perfil:", err);
+          alert("Erro ao criar perfil no banco: " + (err?.message || "Erro desconhecido"));
           // Fallback para não travar a UI
-          setPerfil(p => ({...p, nome: nomeSugerido, usuario_id: session.user.id}));
+          setPerfil(p => ({...p, id: 'temp-' + Date.now(), nome: nomeSugerido, usuario_id: session.user.id}));
         }
       }
     }
