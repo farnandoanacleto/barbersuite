@@ -1018,7 +1018,19 @@ function ModalEquipe({membro, onSave, onClose}) {
   );
 }
 
-// ─── APP PRINCIPAL ────────────────────────────────────────────────────────────
+const initPerfil = {
+  nome: 'Carregando...',
+  slug: 'barbearia',
+  telefone: '',
+  email: '',
+  endereco: '',
+  descricao: '',
+  cor_principal: '#B8973A',
+  horario_abertura: '08:00',
+  horario_fechamento: '19:00',
+  dias_funcionamento: ['seg','ter','qua','qui','sex','sab'],
+};
+
 const ABAS = [
   { key:'servicos', icon:'', label:'Serviços',       section:'Configuração' },
   { key:'planos',   icon:'', label:'Planos do clube', section:null },

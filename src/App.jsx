@@ -1559,12 +1559,14 @@ export default function App() {
         }));
       } else {
         // AUTO-CRIAÇÃO: Se o usuário logou mas não tem perfil, criamos um agora
-        console.log("Perfil não encontrado. Criando perfil automático...");
+        console.log("Perfil não encontrado. Tentando criar perfil automático...");
+        
+        const nomeSugerido = session.user.user_metadata?.nome_barbearia || 'Nova Barbearia';
         const novoPerfil = {
           usuario_id: session.user.id,
-          nome: session.user.user_metadata?.nome_barbearia || 'Minha Barbearia',
+          nome: nomeSugerido,
           email: session.user.email,
-          slug: (session.user.user_metadata?.nome_barbearia || 'barbearia').toLowerCase().replace(/\s+/g, '-'),
+          slug: nomeSugerido.toLowerCase().replace(/\s+/g, '-') + '-' + Math.floor(Math.random()*1000),
         };
         
         const { data: created, error: err } = await supabase
@@ -1573,7 +1575,13 @@ export default function App() {
           .select()
           .single();
         
-        if (created) setPerfil(p => ({...p, ...created}));
+        if (created) {
+          setPerfil(p => ({...p, ...created}));
+        } else {
+          console.error("Erro crítico ao criar perfil:", err);
+          // Fallback para não travar a UI
+          setPerfil(p => ({...p, nome: nomeSugerido, usuario_id: session.user.id}));
+        }
       }
     }
     carregarPerfil();
