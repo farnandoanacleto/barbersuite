@@ -873,7 +873,7 @@ function TabEquipe({ equipe, setEquipe }) {
 }
 
 // ─── ABA AUTOMAÇÕES ──────────────────────────────────────────────────────────
-function TabAutomacoes() {
+function TabAutomacoes({ perfil }) {
   const [loading, setLoading] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [config, setConfig] = useState({
@@ -900,18 +900,19 @@ function TabAutomacoes() {
   const salvar = async () => {
     setLoading(true);
     const { error: err1 } = await supabase.from('config_automacoes').upsert({
+      barbearia_id: perfil.id,
       boas_vindas: config.boas_vindas,
       confirmacao: config.confirmacao,
       lembrete:    config.lembrete,
       nps_request: config.nps_request,
       updated_at:  new Date().toISOString()
-    });
+    }, { onConflict: 'barbearia_id' });
 
-    const { error: err2 } = await supabase.from('tenants').update({
+    const { error: err2 } = await supabase.from('barbearia_perfis').update({
       whatsapp_url:       config.whatsapp_url,
       whatsapp_instancia: config.whatsapp_instancia,
       whatsapp_token:     config.whatsapp_token
-    }).eq('id', (await supabase.rpc('fn_tenant_id_atual')).data);
+    }).eq('id', perfil.id);
 
     setLoading(false);
     if (!err1 && !err2) {
@@ -1142,7 +1143,7 @@ export default function ConfiguracaoBarbearia() {
             {aba==='planos'   && <TabPlanos planos={planos} setPlanos={setPlanos} />}
             {aba==='equipe'   && <TabEquipe equipe={equipe} setEquipe={setEquipe} />}
             {aba==='perfil'   && <TabPerfil perfil={perfil} setPerfil={setPerfil} />}
-            {aba==='automacoes' && <TabAutomacoes />}
+            {aba==='automacoes' && <TabAutomacoes perfil={perfil} />}
             {aba==='billing'    && <TabBilling perfil={perfil} />}
           </div>
         </div>

@@ -1558,9 +1558,22 @@ export default function App() {
           horario_fechamento:(data.horario_fechamento||'19:00').slice(0,5),
         }));
       } else {
-        // Se não encontrar perfil específico, tenta carregar o primeiro disponível (apenas para admins globais)
-        // ou mantém o initPerfil
-        console.log("Perfil não encontrado para este usuário, usando padrão.");
+        // AUTO-CRIAÇÃO: Se o usuário logou mas não tem perfil, criamos um agora
+        console.log("Perfil não encontrado. Criando perfil automático...");
+        const novoPerfil = {
+          usuario_id: session.user.id,
+          nome: session.user.user_metadata?.nome_barbearia || 'Minha Barbearia',
+          email: session.user.email,
+          slug: (session.user.user_metadata?.nome_barbearia || 'barbearia').toLowerCase().replace(/\s+/g, '-'),
+        };
+        
+        const { data: created, error: err } = await supabase
+          .from('barbearia_perfis')
+          .insert([novoPerfil])
+          .select()
+          .single();
+        
+        if (created) setPerfil(p => ({...p, ...created}));
       }
     }
     carregarPerfil();
