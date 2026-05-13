@@ -1028,7 +1028,6 @@ const ABAS = [
 
 const initServicos = [];
 const initPlanos = [];
-const initEquipe = [];
 
 export default function ConfiguracaoBarbearia() {
   const [aba, setAba] = useState('servicos');
