@@ -667,41 +667,46 @@ const initEquipe = [
 
 // ─── ABA BILLING (SAAS) ──────────────────────────────────────────────────────
 function TabBilling({ perfil }) {
-  const [loading, setLoading] = useState(false);
-  const stats = {
-    clientes: 128,
-    agendamentos: 450,
-    equipe: 3,
-    limite_clientes: perfil.plano_saas === 'starter' ? 200 : 1000,
-  };
+  const [stats, setStats] = useState({ clientes: 0, agendamentos: 0, equipe: 0 });
+
+  useEffect(() => {
+    if (!perfil.tenant_id) return;
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('papel', 'cliente').eq('tenant_id', perfil.tenant_id)
+      .then(({ count }) => setStats(s => ({ ...s, clientes: count || 0 })));
+    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('papel', 'barbeiro').eq('tenant_id', perfil.tenant_id)
+      .then(({ count }) => setStats(s => ({ ...s, equipe: count || 0 })));
+    const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
+    supabase.from('agendamentos').select('*', { count: 'exact', head: true }).eq('tenant_id', perfil.tenant_id).gte('data_hora', inicioMes.toISOString())
+      .then(({ count }) => setStats(s => ({ ...s, agendamentos: count || 0 })));
+  }, [perfil.tenant_id]);
+
+  const planoAtual = perfil.plano_saas || null;
+  const limiteClientes = planoAtual === 'starter' ? 200 : null;
 
   const planosSaaS = [
-    { key: 'starter', nome: 'Starter', preco: '49', desc: 'Ideal para quem está começando', features: ['Até 200 clientes', 'Agenda completa', 'App do cliente'] },
-    { key: 'pro', nome: 'Pro', preco: '99', desc: 'Para barbearias em crescimento', features: ['Clientes ilimitados', 'Módulo Financeiro', 'NPS e Fidelidade', 'Automação WhatsApp'], destaque: true },
-    { key: 'enterprise', nome: 'Enterprise', preco: '199', desc: 'Gestão total para grandes redes', features: ['Múltiplas unidades', 'Relatórios avançados', 'Suporte prioritário', 'API aberta'] },
+    { key: 'starter',    nome: 'Starter',    preco: '49',  desc: 'Ideal para quem está começando',      features: ['Até 200 clientes', 'Agenda completa', 'CRM básico'] },
+    { key: 'pro',        nome: 'Pro',        preco: '99',  desc: 'Para barbearias em crescimento',      features: ['Clientes ilimitados', 'Módulo Financeiro', 'NPS e Fidelidade', 'Automação WhatsApp'], destaque: true },
+    { key: 'enterprise', nome: 'Enterprise', preco: '199', desc: 'Gestão total para grandes redes',     features: ['Múltiplas unidades', 'Relatórios avançados', 'Suporte prioritário', 'API aberta'] },
   ];
-
-  const handleUpgrade = async (plano) => {
-    setLoading(true);
-    // Simulação de redirect para Stripe Checkout
-    setTimeout(() => {
-      alert(`Redirecionando para o checkout do plano ${plano.nome}...`);
-      setLoading(false);
-    }, 1500);
-  };
 
   return (
     <>
+      {/* Plano atual — lido do banco via perfil.plano_saas */}
       <div className="card" style={{background:'var(--dark)', color:'#fff', border:'none'}}>
         <div className="card-body" style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px'}}>
           <div>
             <div style={{fontSize:11, textTransform:'uppercase', letterSpacing:1, color:'rgba(255,255,255,0.4)', marginBottom:6}}>Plano Atual</div>
             <div style={{fontSize:22, fontWeight:700, fontFamily:"'Playfair Display',serif", color:'var(--gold)'}}>
-              BarberFlow {perfil.plano_saas?.toUpperCase() || 'STARTER'}
+              {planoAtual ? `BarberFlow ${planoAtual.toUpperCase()}` : 'Sem plano'}
             </div>
-            <div style={{fontSize:12, color:'rgba(255,255,255,0.6)', marginTop:4}}>Próxima cobrança: 15 de Maio de 2024</div>
+            <div style={{fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:4}}>
+              Integração com Stripe em breve
+            </div>
           </div>
-          <div className="badge badge-gold" style={{padding:'6px 14px', fontSize:11}}>ATIVO</div>
+          {planoAtual
+            ? <div className="badge badge-gold" style={{padding:'6px 14px', fontSize:11}}>ATIVO</div>
+            : <div className="badge badge-gray" style={{padding:'6px 14px', fontSize:11}}>SEM PLANO</div>
+          }
         </div>
       </div>
 
@@ -710,24 +715,26 @@ function TabBilling({ perfil }) {
         <div className="card" style={{marginBottom:0}}>
           <div className="card-body">
             <div className="form-label">Clientes</div>
-            <div style={{fontSize:20, fontWeight:700}}>{stats.clientes} / {stats.limite_clientes}</div>
-            <div style={{width:'100%', height:4, background:'#eee', borderRadius:2, marginTop:8}}>
-              <div style={{width:`${(stats.clientes/stats.limite_clientes)*100}%`, height:'100%', background:'var(--gold)', borderRadius:2}} />
+            <div style={{fontSize:20, fontWeight:700}}>
+              {stats.clientes}{limiteClientes ? ` / ${limiteClientes}` : ''}
             </div>
+            {limiteClientes && (
+              <div style={{width:'100%', height:4, background:'#eee', borderRadius:2, marginTop:8}}>
+                <div style={{width:`${Math.min((stats.clientes/limiteClientes)*100,100)}%`, height:'100%', background:'var(--gold)', borderRadius:2}} />
+              </div>
+            )}
           </div>
         </div>
         <div className="card" style={{marginBottom:0}}>
           <div className="card-body">
-            <div className="form-label">Agendamentos/mês</div>
+            <div className="form-label">Agendamentos no mês</div>
             <div style={{fontSize:20, fontWeight:700}}>{stats.agendamentos}</div>
-            <div style={{fontSize:11, color:'var(--green)', marginTop:4}}>↑ 12% vs mês anterior</div>
           </div>
         </div>
         <div className="card" style={{marginBottom:0}}>
           <div className="card-body">
-            <div className="form-label">Membros Equipe</div>
+            <div className="form-label">Membros da equipe</div>
             <div style={{fontSize:20, fontWeight:700}}>{stats.equipe}</div>
-            <div style={{fontSize:11, color:'var(--muted)', marginTop:4}}>Capacidade Pro: Ilimitado</div>
           </div>
         </div>
       </div>
@@ -736,10 +743,8 @@ function TabBilling({ perfil }) {
       <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16}}>
         {planosSaaS.map(p => (
           <div key={p.key} className="card" style={{
-            marginBottom:0, 
-            display:'flex', 
-            flexDirection:'column',
-            border: p.destaque ? '2px solid var(--gold)' : (perfil.plano_saas === p.key ? '2px solid var(--dark)' : '1px solid var(--bord)')
+            marginBottom:0, display:'flex', flexDirection:'column',
+            border: p.destaque ? '2px solid var(--gold)' : (planoAtual === p.key ? '2px solid var(--dark)' : '1px solid var(--bord)')
           }}>
             {p.destaque && <div style={{background:'var(--gold)', color:'var(--dark)', fontSize:10, fontWeight:700, textAlign:'center', padding:'4px', textTransform:'uppercase'}}>Recomendado</div>}
             <div className="card-body" style={{flex:1}}>
@@ -759,13 +764,13 @@ function TabBilling({ perfil }) {
               </div>
             </div>
             <div style={{padding:16, borderTop:'1px solid var(--bord)'}}>
-              <button 
-                className={`btn btn-full ${perfil.plano_saas === p.key ? 'btn-outline' : 'btn-primary'}`} 
+              <button
+                className={`btn ${planoAtual === p.key ? 'btn-outline' : 'btn-primary'}`}
                 style={{width:'100%', justifyContent:'center'}}
-                disabled={perfil.plano_saas === p.key || loading}
-                onClick={() => handleUpgrade(p)}
+                disabled={planoAtual === p.key}
+                onClick={() => alert('Integração com Stripe em breve.')}
               >
-                {perfil.plano_saas === p.key ? 'Plano Atual' : 'Mudar Plano'}
+                {planoAtual === p.key ? 'Plano Atual' : 'Selecionar'}
               </button>
             </div>
           </div>
@@ -774,32 +779,8 @@ function TabBilling({ perfil }) {
 
       <div className="card" style={{marginTop:24}}>
         <div className="card-header"><div className="card-title">Histórico de faturas</div></div>
-        <div className="tbl-wrap" style={{marginBottom:0, border:'none'}}>
-          <table>
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { data:'15/04/2024', desc:'Mensalidade BarberFlow Pro', valor:'99,00', status:'pago' },
-                { data:'15/03/2024', desc:'Mensalidade BarberFlow Pro', valor:'99,00', status:'pago' },
-              ].map((f, i) => (
-                <tr key={i}>
-                  <td>{f.data}</td>
-                  <td>{f.desc}</td>
-                  <td>R$ {f.valor}</td>
-                  <td><span className="badge badge-green">Pago</span></td>
-                  <td><button className="btn btn-ghost" style={{fontSize:11}}>📄 PDF</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div style={{padding:'32px 18px', textAlign:'center', color:'var(--muted)', fontSize:13}}>
+          Nenhuma fatura encontrada. O histórico de cobranças aparecerá aqui após a integração com o Stripe.
         </div>
       </div>
     </>
