@@ -870,39 +870,42 @@ function TabAutomacoes({ perfil }) {
   });
 
   useEffect(() => {
+    if (!perfil.tenant_id) return;
     async function carregar() {
-      const { data } = await supabase.from('config_automacoes').select('*').single();
+      const { data } = await supabase.from('config_automacoes')
+        .select('*')
+        .eq('tenant_id', perfil.tenant_id)
+        .maybeSingle();
       if (data) setConfig(prev => ({ ...prev, ...data }));
-      
-      const { data: tData } = await supabase.from('tenants').select('whatsapp_url, whatsapp_instancia, whatsapp_token').single();
-      if (tData) setConfig(prev => ({ ...prev, ...tData }));
     }
     carregar();
-  }, []);
+  }, [perfil.tenant_id]);
 
   const salvar = async () => {
+    if (!perfil.tenant_id) {
+      alert('Perfil ainda não carregado. Aguarde e tente novamente.');
+      return;
+    }
     setLoading(true);
-    const { error: err1 } = await supabase.from('config_automacoes').upsert({
-      barbearia_id: perfil.id,
-      boas_vindas: config.boas_vindas,
-      confirmacao: config.confirmacao,
-      lembrete:    config.lembrete,
-      nps_request: config.nps_request,
-      updated_at:  new Date().toISOString()
-    }, { onConflict: 'barbearia_id' });
-
-    const { error: err2 } = await supabase.from('barbearia_perfis').update({
+    const { error } = await supabase.from('config_automacoes').upsert({
+      tenant_id:          perfil.tenant_id,
+      boas_vindas:        config.boas_vindas,
+      confirmacao:        config.confirmacao,
+      lembrete:           config.lembrete,
+      nps_request:        config.nps_request,
       whatsapp_url:       config.whatsapp_url,
       whatsapp_instancia: config.whatsapp_instancia,
-      whatsapp_token:     config.whatsapp_token
-    }).eq('id', perfil.id);
+      whatsapp_token:     config.whatsapp_token,
+      atualizado_em:      new Date().toISOString(),
+    }, { onConflict: 'tenant_id' });
 
     setLoading(false);
-    if (!err1 && !err2) {
+    if (!error) {
       setSalvo(true);
       setTimeout(() => setSalvo(false), 3000);
     } else {
-      console.error("Erro ao salvar configurações.");
+      console.error("Erro ao salvar automações:", error);
+      alert('Erro ao salvar: ' + error.message);
     }
   };
 
@@ -1042,11 +1045,13 @@ export default function ConfiguracaoBarbearia() {
       // Carregar Perfil do usuário logado
       const { data: pData } = await supabase.from('barbearia_perfis')
         .select('*')
-        .eq('usuario_id', session.user.id)
-        .single();
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
 
       if (pData) {
         setPerfil({
+           id:                 pData.id,
+           tenant_id:          pData.tenant_id,
            nome:               pData.nome || '',
            slug:               pData.slug || '',
            telefone:           pData.telefone || '',

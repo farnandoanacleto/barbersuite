@@ -150,19 +150,17 @@ export default function AuthBarbearia({ onLogin }) {
       return;
     }
 
-    // 2. Criar perfil da barbearia
-    const { error: profileError } = await supabase.from('barbearia_perfis').insert([{
-      usuario_id: authData.user.id,
-      nome: cadNome,
-      slug: cadSlug,
-      telefone: cadTelefone,
-      endereco: cadEndereco,
-      email: cadEmail
-    }]);
+    // 2. Criar barbearia via RPC (cria tenant + perfil + usuário admin atomicamente)
+    const { error: profileError } = await supabase.rpc('fn_cadastrar_barbearia', {
+      p_nome:    cadNome,
+      p_email:   cadEmail,
+      p_slug:    cadSlug,
+      p_auth_id: authData.user.id,
+    });
 
     setLoading(false);
     if (profileError) {
-      setErro("Conta criada, mas erro ao salvar perfil: " + profileError.message);
+      setErro("Conta criada, mas erro ao configurar barbearia: " + profileError.message);
     } else {
       setSucesso("Conta criada com sucesso! Você já pode fazer login.");
       setEtapa(3);

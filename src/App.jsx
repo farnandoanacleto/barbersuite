@@ -100,6 +100,12 @@ const css = `
     padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.07);
     display: flex; align-items: center; gap: 10px;
   }
+  .logout-btn {
+    margin-left: auto; background: transparent; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.28); font-size: 15px; padding: 4px 2px; flex-shrink: 0;
+    transition: color 0.15s; line-height: 1;
+  }
+  .logout-btn:hover { color: rgba(255,255,255,0.7); }
   .user-avatar {
     width: 34px; height: 34px; border-radius: 50%;
     background: var(--gold); color: var(--dark);
@@ -1538,14 +1544,18 @@ const initPerfil = {
 
 export default function App() {
   const [logado, setLogado] = useState(false);
+  const [iniciando, setIniciando] = useState(true);
   const [page, setPage] = useState("agenda");
   const [perfil, setPerfil] = useState(initPerfil);
 
   useEffect(() => {
-    // Verificar se já existe uma sessão ativa ao abrir o app
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setLogado(true);
+    // onAuthStateChange cobre: sessão persistida, login, logout e refresh de token
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLogado(!!session);
+      if (!session) setPerfil(initPerfil);
+      setIniciando(false);
     });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(()=>{
@@ -1556,45 +1566,63 @@ export default function App() {
       // Buscar perfil vinculado ao usuário logado
       const { data, error } = await supabase.from('barbearia_perfis')
         .select('*')
-        .eq('usuario_id', session.user.id) // Filtro crítico para isolamento de dados
-        .single();
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
 
-      if(data) {
+      if (data) {
         setPerfil(p=>({...p, ...data,
           horario_abertura:(data.horario_abertura||'08:00').slice(0,5),
           horario_fechamento:(data.horario_fechamento||'19:00').slice(0,5),
         }));
       } else {
-        // AUTO-CRIAÇÃO: Se o usuário logou mas não tem perfil, criamos um agora
-        console.log("Perfil não encontrado. Tentando criar perfil automático...");
-        
-        const nomeSugerido = session.user.user_metadata?.nome_barbearia || 'Nova Barbearia';
-        const novoPerfil = {
-          usuario_id: session.user.id,
-          nome: nomeSugerido,
-          email: session.user.email,
-          slug: nomeSugerido.toLowerCase().replace(/\s+/g, '-') + '-' + Math.floor(Math.random()*1000),
-        };
-        
-        const { data: created, error: err } = await supabase
-          .from('barbearia_perfis')
-          .insert([novoPerfil])
-          .select()
-          .single();
-        
-        if (created) {
-          setPerfil(p => ({...p, ...created}));
+        // Perfil ainda não existe — criar via fn_cadastrar_barbearia (cria tenant + perfil + usuário admin)
+        console.log("Perfil não encontrado. Criando via RPC...");
+
+        const nomeSugerido = session.user.user_metadata?.nome_barbearia
+          || session.user.email?.split('@')[0]
+          || 'Minha Barbearia';
+        const slugBase = nomeSugerido
+          .toLowerCase()
+          .normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .slice(0, 35);
+        const slug = slugBase + '-' + Math.floor(Math.random() * 9000 + 1000);
+
+        const { data: rpcData, error: rpcError } = await supabase.rpc('fn_cadastrar_barbearia', {
+          p_nome:    nomeSugerido,
+          p_email:   session.user.email || '',
+          p_slug:    slug,
+          p_auth_id: session.user.id,
+        });
+
+        if (!rpcError) {
+          // Buscar o perfil recém-criado
+          const { data: novoPerfil } = await supabase.from('barbearia_perfis')
+            .select('*')
+            .eq('auth_user_id', session.user.id)
+            .maybeSingle();
+          if (novoPerfil) {
+            setPerfil(p => ({...p, ...novoPerfil,
+              horario_abertura:(novoPerfil.horario_abertura||'08:00').slice(0,5),
+              horario_fechamento:(novoPerfil.horario_fechamento||'19:00').slice(0,5),
+            }));
+          }
         } else {
-          console.error("Erro crítico ao criar perfil:", err);
-          // Fallback para não travar a UI
-          setPerfil(p => ({...p, id: 'temp-' + Date.now(), nome: nomeSugerido, usuario_id: session.user.id}));
+          console.error("Erro ao criar perfil via RPC:", rpcError);
+          setPerfil(p => ({...p, nome: nomeSugerido}));
         }
       }
     }
     carregarPerfil();
   }, [logado]);
 
-  if(!logado) return <AuthBarbearia onLogin={()=>setLogado(true)} />;
+  if (iniciando) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'#1A1610',fontFamily:"'DM Sans',sans-serif",color:'rgba(255,255,255,0.35)',fontSize:13,letterSpacing:1}}>
+      Carregando...
+    </div>
+  );
+  if (!logado) return <AuthBarbearia onLogin={()=>setLogado(true)} />;
 
   const pages = {
     agenda:<PageAgenda perfil={perfil} />,
@@ -1649,10 +1677,15 @@ export default function App() {
 
           <div className="sidebar-user">
             <div className="user-avatar">{perfil.nome?.substring(0,2).toUpperCase()}</div>
-            <div>
-              <div className="user-name">{perfil.nome}</div>
+            <div style={{flex:1, minWidth:0}}>
+              <div className="user-name" style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{perfil.nome}</div>
               <div className="user-role">Administrador</div>
             </div>
+            <button
+              className="logout-btn"
+              title="Sair"
+              onClick={async () => { await supabase.auth.signOut(); }}
+            >⏻</button>
           </div>
         </div>
 
