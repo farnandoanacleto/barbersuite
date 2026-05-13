@@ -2,7 +2,6 @@ import { useState, useEffect, Fragment } from "react";
 import { supabase } from "./lib/supabase";
 import ImportadorClientes from "./ImportadorClientes";
 import PageFinanceiro from "./pages/PageFinanceiro";
-import ClienteApp from "./pages/ClienteApp";
 import AuthBarbearia from './pages/AuthBarbearia';
 import ConfiguracaoBarbearia from './pages/ConfiguracaoBarbearia';
 import PageRelatorios from "./pages/PageRelatorios";
@@ -452,9 +451,11 @@ function AIBox({ text }) {
 
 function ModalNovoAgendamento({ slot, onClose, onSalvar }) {
   const [cliente, setCliente] = useState('');
+  const [clienteId, setClienteId] = useState(null);
   const [sugestoes, setSugestoes] = useState([]);
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
   const [servico, setServico] = useState('');
+  const [servicoId, setServicoId] = useState(null);
   const [observacao, setObservacao] = useState('');
   const [servicosDB, setServicosDB] = useState([]);
 
@@ -465,14 +466,16 @@ function ModalNovoAgendamento({ slot, onClose, onSalvar }) {
 
   async function buscarClientes(texto) {
     setCliente(texto);
+    setClienteId(null);
     if (texto.length < 2) { setSugestoes([]); return; }
-    const { data } = await supabase.from('clientes').select('id,nome,telefone').ilike('nome', `%${texto}%`).limit(5);
+    const { data } = await supabase.from('usuarios').select('id,nome,telefone').eq('papel','cliente').ilike('nome', `%${texto}%`).limit(5);
     setSugestoes(data || []);
     setMostrarSugestoes(true);
   }
 
   function selecionarCliente(c) {
     setCliente(c.nome);
+    setClienteId(c.id);
     setSugestoes([]);
     setMostrarSugestoes(false);
   }
@@ -521,7 +524,7 @@ function ModalNovoAgendamento({ slot, onClose, onSalvar }) {
         <div style={{marginBottom:12}}>
           <label style={{display:'block',fontSize:11,fontWeight:600,color:'#7A7060',textTransform:'uppercase',letterSpacing:'0.7px',marginBottom:5}}>Servico</label>
           <select style={{width:'100%',padding:'9px 12px',border:'1px solid #E8E2D4',borderRadius:7,fontSize:13,fontFamily:'DM Sans,sans-serif',background:'#fff',outline:'none'}}
-            value={servico} onChange={e=>setServico(e.target.value)}>
+            value={servico} onChange={e=>{ setServico(e.target.value); const s=servicosDB.find(x=>x.nome===e.target.value); setServicoId(s?.id||null); }}>
             <option value="">Selecione o servico</option>
             {servicosDB.length > 0
               ? servicosDB.map(s => (
@@ -548,14 +551,17 @@ function ModalNovoAgendamento({ slot, onClose, onSalvar }) {
           <button style={{padding:'9px 18px',borderRadius:8,background:cliente&&servico?'#B8973A':'#E8E2D4',border:'none',fontSize:13,fontWeight:600,cursor:cliente&&servico?'pointer':'not-allowed',fontFamily:'DM Sans,sans-serif',color:'#1A1610'}}
             disabled={!cliente||!servico}
             onClick={async ()=>{
+  const tenantId = (await supabase.rpc('fn_tenant_id_atual')).data;
+  const diaHoje = new Date().toISOString().split('T')[0];
+  const dataHora = `${diaHoje}T${slot?.hora || '09:00'}:00`;
   const { data, error } = await supabase.from('agendamentos').insert([{
-    cliente_nome: cliente,
-    servico: servico,
-    barbeiro_nome: slot?.barbeiro?.nome || '',
-    hora: slot?.hora || '',
-    dia: new Date().toISOString().split('T')[0],
-    observacao: observacao || '',
-    status: 'confirmado'
+    tenant_id:   tenantId,
+    cliente_id:  clienteId || null,
+    barbeiro_id: slot?.barbeiro?.id || null,
+    servico_id:  servicoId || null,
+    data_hora:   dataHora,
+    status:      'confirmado',
+    observacoes: [cliente && `Cliente: ${cliente}`, servico && `Serviço: ${servico}`, observacao].filter(Boolean).join(' | '),
   }]).select().single();
   if (!error) {
     onSalvar({cliente, servico, observacao, ...slot});
@@ -1264,6 +1270,17 @@ function PageCRM() {
                     </div>
                   </div>
                   <button className="btn btn-outline" onClick={()=>setModalEditarAberto(true)}>Editar</button>
+                  <button className="btn btn-danger" onClick={async()=>{
+                    if(!window.confirm(`Excluir ${selected.nome}? Esta ação não pode ser desfeita.`)) return;
+                    const { error } = await supabase.from('usuarios').delete().eq('id', selected.id);
+                    if (!error) {
+                      const nova = lista.filter(c=>c.id!==selected.id);
+                      setLista(nova);
+                      setSelected(nova[0]||null);
+                    } else {
+                      alert('Erro ao excluir: ' + error.message);
+                    }
+                  }}>Excluir</button>
                 </div>
 
             <div className="stat-grid stat-grid-4">
@@ -1524,8 +1541,7 @@ const navItems = [
   {key:"estoque",   label:"Estoque",           icon:"", section:null},
   {key:"financeiro",label:"Financeiro",        icon:"", section:null},
   {key:"relatorios",label:"Relatórios",        icon:"", section:null},
-  {key:"cliente",   label:"App Cliente",       icon:"", section:"Clientes"},
-  {key:"experiencia",label:"Experiência",      icon:"", section:null, disabled:true},
+  {key:"experiencia",label:"Experiência",      icon:"", section:"Clientes", disabled:true},
   {key:"config",    label:"Configurações",     icon:"", section:"Config"},
 ];
 
@@ -1634,7 +1650,6 @@ export default function App() {
     dashboard:<PageDashboard />,
     financeiro:<PageFinanceiro />,
     relatorios: <PageRelatorios />,
-    cliente:<ClienteApp />,
     config:<ConfiguracaoBarbearia />,
   };
 

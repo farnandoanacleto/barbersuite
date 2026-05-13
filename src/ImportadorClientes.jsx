@@ -338,57 +338,83 @@ export default function ImportadorClientes({ onImportarConcluido }) {
     registrosMapeados.findIndex(x => x.telefone && x.telefone === r.telefone) !== i
   ).length;
 
-  // ─── Simulação de importação ─────────────────────────────────────────────
+  // ─── Importação real no Supabase ─────────────────────────────────────────
   const executarImportacao = async () => {
     setEtapa(4);
     setProgresso(0);
     setLogs([]);
 
-    addLog(`Iniciando importação de ${parsed.registros.length} registros...`, "info");
-    addLog(`Formato detectado: ${parsed.formato}`, "info");
-    await delay(400);
+    addLog(`Iniciando importação de ${registrosMapeados.length} registros...`, "info");
+    await delay(200);
+
+    const { data: tenantData } = await supabase.rpc('fn_tenant_id_atual');
+    if (!tenantData) {
+      addLog('Erro: sessão inválida. Faça login novamente.', 'err');
+      return;
+    }
 
     let importados = 0, atualizados = 0, ignorados = 0, erros = 0;
 
     for (let i = 0; i < registrosMapeados.length; i++) {
       const reg = registrosMapeados[i];
-      const pct = Math.round(((i+1) / registrosMapeados.length) * 100);
-      setProgresso(pct);
+      setProgresso(Math.round(((i + 1) / registrosMapeados.length) * 100));
 
-      if (!reg.nome && !reg.telefone) {
-        addLog(`Linha ${i+1}: sem nome nem telefone — ignorada`, "warn");
+      if (!reg.nome || !reg.telefone) {
+        addLog(`Linha ${i + 1}: sem nome ou telefone — ignorada`, "warn");
         ignorados++;
-        await delay(30);
         continue;
       }
 
-      // simula checagem de duplicado
-      const isDuplicado = duplicados > 0 && Math.random() < 0.08;
-      if (isDuplicado) {
+      // Verificar duplicado por telefone
+      const { data: existing } = await supabase.from('usuarios')
+        .select('id').eq('telefone', reg.telefone).eq('papel', 'cliente').maybeSingle();
+
+      if (existing) {
         if (opcoes.pularDuplicados && !opcoes.atualizarExistentes) {
-          addLog(`✓ ${reg.nome || reg.telefone} — já existe, pulado`, "warn");
+          addLog(`${reg.nome} — já existe, pulado`, "warn");
           ignorados++;
-        } else {
-          addLog(`↻ ${reg.nome || reg.telefone} — atualizado`, "ok");
-          atualizados++;
+          continue;
         }
+        if (opcoes.atualizarExistentes) {
+          await supabase.from('usuarios').update({
+            nome: reg.nome,
+            email: reg.email || null,
+            aniversario: reg.aniversario || null,
+          }).eq('id', existing.id);
+          addLog(`${reg.nome} — atualizado`, "ok");
+          atualizados++;
+          continue;
+        }
+      }
+
+      const { error } = await supabase.from('usuarios').insert({
+        tenant_id:   tenantData,
+        nome:        reg.nome,
+        telefone:    reg.telefone,
+        email:       reg.email || null,
+        aniversario: reg.aniversario || null,
+        papel:       'cliente',
+      });
+
+      if (error) {
+        addLog(`${reg.nome} — erro: ${error.message}`, "err");
+        erros++;
       } else {
-        if (i % 15 === 0 && i > 0) addLog(`✓ ${importados} clientes importados...`, "ok");
+        if (importados % 10 === 0 && importados > 0) addLog(`${importados} clientes importados...`, "ok");
         importados++;
       }
 
-      await delay(Math.random() * 40 + 20);
+      await delay(30);
     }
 
-    await delay(500);
     addLog(`━━━ Importação concluída ━━━`, "info");
     addLog(`✓ ${importados} clientes novos importados`, "ok");
     if (atualizados) addLog(`↻ ${atualizados} clientes atualizados`, "ok");
-    if (ignorados) addLog(`⚠ ${ignorados} registros ignorados`, "warn");
-    if (erros) addLog(`✗ ${erros} erros`, "err");
+    if (ignorados)   addLog(`⚠ ${ignorados} registros ignorados`, "warn");
+    if (erros)       addLog(`✗ ${erros} erros`, "err");
 
-    setResultado({ importados, atualizados, ignorados, erros, total: parsed.registros.length });
-    await delay(600);
+    setResultado({ importados, atualizados, ignorados, erros, total: registrosMapeados.length });
+    await delay(400);
     setEtapa(5);
     if (onImportarConcluido) onImportarConcluido({ importados, atualizados, ignorados });
   };

@@ -108,7 +108,6 @@ export default function PageRelatorios() {
       key: 'agendamentos',
       titulo: 'Agendamentos',
       descricao: 'Lista de todos os agendamentos no periodo selecionado com cliente, servico, barbeiro e status.',
-      icone: '📅',
       acao: gerarAgendamentos,
       usaFiltro: true,
     },
@@ -116,7 +115,6 @@ export default function PageRelatorios() {
       key: 'financeiro',
       titulo: 'Financeiro',
       descricao: 'Despesas por categoria e competencia no periodo selecionado.',
-      icone: '💰',
       acao: gerarFinanceiro,
       usaFiltro: true,
     },
@@ -124,7 +122,6 @@ export default function PageRelatorios() {
       key: 'clientes',
       titulo: 'Clientes',
       descricao: 'Lista completa de todos os clientes cadastrados com plano e informacoes de contato.',
-      icone: '👥',
       acao: gerarClientes,
       usaFiltro: false,
     },
@@ -132,7 +129,6 @@ export default function PageRelatorios() {
       key: 'comissoes',
       titulo: 'Comissoes',
       descricao: 'Comissoes por barbeiro no periodo selecionado com faturamento base e valor pago.',
-      icone: '💼',
       acao: gerarComissoes,
       usaFiltro: true,
     },
@@ -140,7 +136,6 @@ export default function PageRelatorios() {
       key: 'clube',
       titulo: 'Clube de assinatura',
       descricao: 'Lista completa de membros do clube com plano, status e uso do mes.',
-      icone: '♛',
       acao: gerarClube,
       usaFiltro: false,
     },
@@ -171,7 +166,6 @@ export default function PageRelatorios() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
           {relatorios.map(r=>(
             <div key={r.key} style={{background:'#fff',border:'1px solid #E8E2D4',borderRadius:12,padding:20,display:'flex',flexDirection:'column',gap:12}}>
-              <div style={{fontSize:28}}>{r.icone}</div>
               <div>
                 <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,marginBottom:6}}>{r.titulo}</div>
                 <div style={{fontSize:12,color:'#7A7060',lineHeight:1.6}}>{r.descricao}</div>

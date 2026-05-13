@@ -1023,7 +1023,7 @@ const ABAS = [
   { key:'equipe',   icon:'', label:'Equipe',          section:null },
   { key:'perfil',   icon:'', label:'Perfil',          section:null },
   { key:'automacoes', icon:'', label:'Automação',       section:'Sistema' },
-  { key:'billing',  icon:'', label:'Assinatura SaaS', section:null },
+  { key:'billing',  icon:'', label:'Assinatura', section:null },
 ];
 
 const initServicos = [];
