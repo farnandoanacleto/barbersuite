@@ -1515,15 +1515,15 @@ function PageDashboard() {
 }
 
 const navItems = [
-  {key:"gestao",     label:"Gestão",           icon:"", section:"Principal"},
-  {key:"clube",     label:"Clube",             icon:"",  section:null},
+  {key:"dashboard", label:"Dashboard",         icon:"", section:"Principal"},
+  {key:"gestao",    label:"Agenda",            icon:"", section:null},
+  {key:"clube",     label:"Clube",             icon:"", section:null},
   {key:"crm",       label:"Clientes",          icon:"", badge:null, section:null},
   {key:"comandas",  label:"Comandas",          icon:"", section:null},
   {key:"importador",label:"Importar clientes", icon:"", section:null},
   {key:"estoque",   label:"Estoque",           icon:"", section:null},
-  {key:"dashboard", label:"Dashboard",         icon:"", section:null},
   {key:"financeiro",label:"Financeiro",        icon:"", section:null},
-  {key:"relatorios", label:"Relatórios", icon:"", section:null},
+  {key:"relatorios",label:"Relatórios",        icon:"", section:null},
   {key:"cliente",   label:"App Cliente",       icon:"", section:"Clientes"},
   {key:"experiencia",label:"Experiência",      icon:"", section:null, disabled:true},
   {key:"config",    label:"Configurações",     icon:"", section:"Config"},
