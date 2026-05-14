@@ -668,6 +668,19 @@ const initEquipe = [
 // ─── ABA BILLING (SAAS) ──────────────────────────────────────────────────────
 function TabBilling({ perfil }) {
   const [stats, setStats] = useState({ clientes: 0, agendamentos: 0, equipe: 0 });
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [msgSucesso, setMsgSucesso] = useState(false);
+
+  useEffect(() => {
+    // Detecta retorno do Stripe Checkout
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'sucesso') {
+      setMsgSucesso(true);
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => setMsgSucesso(false), 6000);
+    }
+  }, []);
 
   useEffect(() => {
     if (!perfil.tenant_id) return;
@@ -680,33 +693,107 @@ function TabBilling({ perfil }) {
       .then(({ count }) => setStats(s => ({ ...s, agendamentos: count || 0 })));
   }, [perfil.tenant_id]);
 
+  async function handleCheckout(planoKey) {
+    setCheckoutLoading(planoKey);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-checkout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ plano: planoKey }),
+        }
+      );
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Erro ao criar sessão de checkout');
+      }
+    } catch (err) {
+      alert('Erro ao iniciar checkout: ' + err.message);
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-portal`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({}),
+        }
+      );
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Erro ao abrir portal');
+      }
+    } catch (err) {
+      alert('Erro ao abrir gerenciamento: ' + err.message);
+    } finally {
+      setPortalLoading(false);
+    }
+  }
+
   const planoAtual = perfil.plano_saas || null;
   const limiteClientes = planoAtual === 'starter' ? 200 : null;
 
   const planosSaaS = [
-    { key: 'starter',    nome: 'Starter',    preco: '49',  desc: 'Ideal para quem está começando',      features: ['Até 200 clientes', 'Agenda completa', 'CRM básico'] },
-    { key: 'pro',        nome: 'Pro',        preco: '99',  desc: 'Para barbearias em crescimento',      features: ['Clientes ilimitados', 'Módulo Financeiro', 'NPS e Fidelidade', 'Automação WhatsApp'], destaque: true },
-    { key: 'enterprise', nome: 'Enterprise', preco: '199', desc: 'Gestão total para grandes redes',     features: ['Múltiplas unidades', 'Relatórios avançados', 'Suporte prioritário', 'API aberta'] },
+    { key: 'starter',    nome: 'Starter',    preco: '49',  desc: 'Ideal para quem está começando',   features: ['Até 200 clientes', 'Agenda completa', 'CRM básico'] },
+    { key: 'pro',        nome: 'Pro',        preco: '99',  desc: 'Para barbearias em crescimento',   features: ['Clientes ilimitados', 'Módulo Financeiro', 'NPS e Fidelidade', 'Automação WhatsApp'], destaque: true },
+    { key: 'enterprise', nome: 'Enterprise', preco: '199', desc: 'Gestão total para grandes redes',  features: ['Múltiplas unidades', 'Relatórios avançados', 'Suporte prioritário', 'API aberta'] },
   ];
 
   return (
     <>
-      {/* Plano atual — lido do banco via perfil.plano_saas */}
+      {msgSucesso && (
+        <div className="alert-box alert-ok" style={{marginBottom:16}}>
+          ✓ Assinatura ativada com sucesso! Seu plano já está ativo.
+        </div>
+      )}
+
+      {/* Plano atual */}
       <div className="card" style={{background:'var(--dark)', color:'#fff', border:'none'}}>
         <div className="card-body" style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'24px'}}>
           <div>
             <div style={{fontSize:11, textTransform:'uppercase', letterSpacing:1, color:'rgba(255,255,255,0.4)', marginBottom:6}}>Plano Atual</div>
             <div style={{fontSize:22, fontWeight:700, fontFamily:"'Playfair Display',serif", color:'var(--gold)'}}>
-              {planoAtual ? `BarberFlow ${planoAtual.toUpperCase()}` : 'Sem plano'}
+              {planoAtual ? `BarberFlow ${planoAtual.toUpperCase()}` : 'Sem plano ativo'}
             </div>
             <div style={{fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:4}}>
-              Integração com Stripe em breve
+              {planoAtual ? 'Renovação mensal automática via Stripe' : 'Escolha um plano abaixo para começar'}
             </div>
           </div>
-          {planoAtual
-            ? <div className="badge badge-gold" style={{padding:'6px 14px', fontSize:11}}>ATIVO</div>
-            : <div className="badge badge-gray" style={{padding:'6px 14px', fontSize:11}}>SEM PLANO</div>
-          }
+          <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:10}}>
+            {planoAtual
+              ? <div className="badge badge-gold" style={{padding:'6px 14px', fontSize:11}}>ATIVO</div>
+              : <div className="badge badge-gray" style={{padding:'6px 14px', fontSize:11}}>SEM PLANO</div>
+            }
+            {perfil.stripe_customer_id && (
+              <button
+                className="btn btn-outline"
+                style={{fontSize:11, color:'rgba(255,255,255,0.6)', borderColor:'rgba(255,255,255,0.2)'}}
+                onClick={handlePortal}
+                disabled={portalLoading}
+              >
+                {portalLoading ? 'Abrindo...' : 'Gerenciar assinatura'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -764,14 +851,20 @@ function TabBilling({ perfil }) {
               </div>
             </div>
             <div style={{padding:16, borderTop:'1px solid var(--bord)'}}>
-              <button
-                className={`btn ${planoAtual === p.key ? 'btn-outline' : 'btn-primary'}`}
-                style={{width:'100%', justifyContent:'center'}}
-                disabled={planoAtual === p.key}
-                onClick={() => alert('Integração com Stripe em breve.')}
-              >
-                {planoAtual === p.key ? 'Plano Atual' : 'Selecionar'}
-              </button>
+              {planoAtual === p.key ? (
+                <button className="btn btn-outline" style={{width:'100%', justifyContent:'center'}} disabled>
+                  Plano Atual
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  style={{width:'100%', justifyContent:'center'}}
+                  disabled={checkoutLoading !== null}
+                  onClick={() => handleCheckout(p.key)}
+                >
+                  {checkoutLoading === p.key ? 'Redirecionando...' : (planoAtual ? 'Mudar para este plano' : 'Assinar agora')}
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -780,7 +873,9 @@ function TabBilling({ perfil }) {
       <div className="card" style={{marginTop:24}}>
         <div className="card-header"><div className="card-title">Histórico de faturas</div></div>
         <div style={{padding:'32px 18px', textAlign:'center', color:'var(--muted)', fontSize:13}}>
-          Nenhuma fatura encontrada. O histórico de cobranças aparecerá aqui após a integração com o Stripe.
+          {perfil.stripe_customer_id
+            ? 'Acesse "Gerenciar assinatura" acima para ver suas faturas no portal Stripe.'
+            : 'Nenhuma fatura encontrada. Assine um plano para ver o histórico de cobranças aqui.'}
         </div>
       </div>
     </>
@@ -996,6 +1091,9 @@ const initPerfil = {
   horario_abertura: '08:00',
   horario_fechamento: '19:00',
   dias_funcionamento: ['seg','ter','qua','qui','sex','sab'],
+  plano_saas: null,
+  stripe_customer_id: null,
+  stripe_subscription_id: null,
 };
 
 const ABAS = [
@@ -1030,18 +1128,21 @@ export default function ConfiguracaoBarbearia() {
 
       if (pData) {
         setPerfil({
-           id:                 pData.id,
-           tenant_id:          pData.tenant_id,
-           nome:               pData.nome || '',
-           slug:               pData.slug || '',
-           telefone:           pData.telefone || '',
-           email:              pData.email || '',
-           endereco:           pData.endereco || '',
-           descricao:          pData.descricao || '',
-           cor_principal:      pData.cor_principal || '#B8973A',
-           horario_abertura:   (pData.horario_abertura || '08:00').slice(0,5),
-           horario_fechamento: (pData.horario_fechamento || '19:00').slice(0,5),
-           dias_funcionamento: pData.dias_funcionamento || ['seg','ter','qua','qui','sex','sab'],
+           id:                     pData.id,
+           tenant_id:              pData.tenant_id,
+           nome:                   pData.nome || '',
+           slug:                   pData.slug || '',
+           telefone:               pData.telefone || '',
+           email:                  pData.email || '',
+           endereco:               pData.endereco || '',
+           descricao:              pData.descricao || '',
+           cor_principal:          pData.cor_principal || '#B8973A',
+           horario_abertura:       (pData.horario_abertura || '08:00').slice(0,5),
+           horario_fechamento:     (pData.horario_fechamento || '19:00').slice(0,5),
+           dias_funcionamento:     pData.dias_funcionamento || ['seg','ter','qua','qui','sex','sab'],
+           plano_saas:             pData.plano_saas || null,
+           stripe_customer_id:     pData.stripe_customer_id || null,
+           stripe_subscription_id: pData.stripe_subscription_id || null,
         });
       }
 
