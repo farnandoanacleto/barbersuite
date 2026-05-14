@@ -671,6 +671,7 @@ function TabBilling({ perfil }) {
   const [checkoutLoading, setCheckoutLoading] = useState(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [msgSucesso, setMsgSucesso] = useState(false);
+  const [errMsg, setErrMsg] = useState(null);
 
   useEffect(() => {
     // Detecta retorno do Stripe Checkout
@@ -694,6 +695,7 @@ function TabBilling({ perfil }) {
   }, [perfil.tenant_id]);
 
   async function handleCheckout(planoKey) {
+    setErrMsg(null);
     setCheckoutLoading(planoKey);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -711,17 +713,18 @@ function TabBilling({ perfil }) {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Erro ao criar sessão de checkout');
+        return;
       }
-    } catch (err) {
-      alert('Erro ao iniciar checkout: ' + err.message);
+      setErrMsg(data.error || 'Erro ao criar sessão de checkout. Tente novamente.');
+    } catch {
+      setErrMsg('Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
       setCheckoutLoading(null);
     }
   }
 
   async function handlePortal() {
+    setErrMsg(null);
     setPortalLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -739,11 +742,11 @@ function TabBilling({ perfil }) {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Erro ao abrir portal');
+        return;
       }
-    } catch (err) {
-      alert('Erro ao abrir gerenciamento: ' + err.message);
+      setErrMsg(data.error || 'Erro ao abrir portal. Tente novamente.');
+    } catch {
+      setErrMsg('Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
       setPortalLoading(false);
     }
@@ -763,6 +766,11 @@ function TabBilling({ perfil }) {
       {msgSucesso && (
         <div className="alert-box alert-ok" style={{marginBottom:16}}>
           ✓ Assinatura ativada com sucesso! Seu plano já está ativo.
+        </div>
+      )}
+      {errMsg && (
+        <div className="alert-box" style={{marginBottom:16, background:'var(--red-b)', color:'var(--red)', border:'1px solid #F09595'}}>
+          ✕ {errMsg}
         </div>
       )}
 
@@ -870,14 +878,6 @@ function TabBilling({ perfil }) {
         ))}
       </div>
 
-      <div className="card" style={{marginTop:24}}>
-        <div className="card-header"><div className="card-title">Histórico de faturas</div></div>
-        <div style={{padding:'32px 18px', textAlign:'center', color:'var(--muted)', fontSize:13}}>
-          {perfil.stripe_customer_id
-            ? 'Acesse "Gerenciar assinatura" acima para ver suas faturas no portal Stripe.'
-            : 'Nenhuma fatura encontrada. Assine um plano para ver o histórico de cobranças aqui.'}
-        </div>
-      </div>
     </>
   );
 }
