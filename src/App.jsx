@@ -411,6 +411,46 @@ const css = `
   .text-green { color: var(--green); }
   .text-red { color: var(--red); }
   .text-amber { color: var(--amber); }
+
+  /* ── Responsivo Mobile ─────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100%;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 200; width: 240px; min-width: 240px;
+    }
+    .sidebar.aberto { transform: translateX(0); }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,22,16,0.55); z-index: 199;
+    }
+    .sidebar-overlay.aberto { display: block; }
+    .mobile-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: var(--dark);
+      border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+    }
+    .hamburger {
+      background: none; border: none; cursor: pointer;
+      display: flex; flex-direction: column; gap: 5px; padding: 4px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: rgba(255,255,255,0.7); border-radius: 2px; }
+    .stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .stat-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .agenda-layout { grid-template-columns: 1fr; }
+    .crm-layout { grid-template-columns: 1fr; }
+    .topbar { padding: 12px 16px; }
+    .page-heading { font-size: 16px; }
+    .modal { padding: 16px; }
+    .table-wrap { overflow-x: auto; }
+  }
+  @media (min-width: 769px) {
+    .mobile-header { display: none; }
+    .sidebar-overlay { display: none !important; }
+  }
 `;
 
 const horasGrid = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
@@ -1531,6 +1571,40 @@ function PageDashboard() {
   );
 }
 
+// ── Controle de Acesso por Plano ─────────────────────────────────
+const PLANO_PAGINAS = {
+  starter:    new Set(['dashboard','gestao','crm','config']),
+  pro:        new Set(['dashboard','gestao','crm','clube','comandas','importador','estoque','financeiro','relatorios','config']),
+  enterprise: new Set(['dashboard','gestao','crm','clube','comandas','importador','estoque','financeiro','relatorios','config']),
+};
+const PLANO_REQUERIDO_NOME = {
+  clube:'Pro', comandas:'Pro', importador:'Pro',
+  estoque:'Pro', financeiro:'Pro', relatorios:'Pro',
+};
+function podeAcessar(plano, chave) {
+  if (!plano) return chave === 'dashboard' || chave === 'config';
+  return (PLANO_PAGINAS[plano] || PLANO_PAGINAS.starter).has(chave);
+}
+function PaginaBloqueada({ chave, onConfig }) {
+  const necessario = PLANO_REQUERIDO_NOME[chave] || 'Pro';
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',padding:40,textAlign:'center'}}>
+      <div style={{fontSize:52,marginBottom:20}}>🔒</div>
+      <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:600,marginBottom:10,color:'var(--text)'}}>
+        Módulo bloqueado
+      </div>
+      <div style={{color:'var(--muted)',fontSize:13,maxWidth:380,marginBottom:28,lineHeight:1.7}}>
+        Este módulo está disponível no plano{' '}
+        <strong style={{color:'var(--text)'}}>BarberFlow {necessario}</strong> ou superior.
+        Faça upgrade para desbloquear todos os recursos.
+      </div>
+      <button className="btn btn-primary" style={{padding:'10px 28px',fontSize:13}} onClick={onConfig}>
+        Ver planos e fazer upgrade
+      </button>
+    </div>
+  );
+}
+
 const navItems = [
   {key:"dashboard", label:"Dashboard",         icon:"", section:"Principal"},
   {key:"gestao",    label:"Agenda",            icon:"", section:null},
@@ -1563,6 +1637,7 @@ export default function App() {
   const [iniciando, setIniciando] = useState(true);
   const [page, setPage] = useState("agenda");
   const [perfil, setPerfil] = useState(initPerfil);
+  const [sidebarAberto, setSidebarAberto] = useState(false);
 
   useEffect(() => {
     // onAuthStateChange cobre: sessão persistida, login, logout e refresh de token
@@ -1640,17 +1715,22 @@ export default function App() {
   );
   if (!logado) return <AuthBarbearia onLogin={()=>setLogado(true)} />;
 
+  const plano = perfil.plano_saas || null;
+  const irConfig = () => { setPage('config'); setSidebarAberto(false); };
+  const bloq = (chave, comp) => podeAcessar(plano, chave) ? comp : <PaginaBloqueada chave={chave} onConfig={irConfig} />;
+
   const pages = {
-    agenda:<PageAgenda perfil={perfil} />,
-    clube:<PageClube />,
-    crm:<PageCRM />,
-    importador:<ImportadorClientes onImportarConcluido={()=>setPage("crm")} />,
-    estoque:<PageEstoque />,
-    comandas:<PageComandas />,
-    dashboard:<PageDashboard />,
-    financeiro:<PageFinanceiro />,
-    relatorios: <PageRelatorios />,
-    config:<ConfiguracaoBarbearia />,
+    agenda:     bloq('gestao', <PageAgenda perfil={perfil} />),
+    gestao:     bloq('gestao', <PageAgenda perfil={perfil} />),
+    clube:      bloq('clube', <PageClube />),
+    crm:        bloq('crm', <PageCRM />),
+    importador: bloq('importador', <ImportadorClientes onImportarConcluido={()=>setPage("crm")} />),
+    estoque:    bloq('estoque', <PageEstoque />),
+    comandas:   bloq('comandas', <PageComandas />),
+    dashboard:  <PageDashboard />,
+    financeiro: bloq('financeiro', <PageFinanceiro />),
+    relatorios: bloq('relatorios', <PageRelatorios />),
+    config:     <ConfiguracaoBarbearia />,
   };
 
   let lastSection = null;
@@ -1659,7 +1739,14 @@ export default function App() {
     <>
       <style>{css}</style>
       <div className="app">
-        <div className="sidebar">
+
+        {/* Overlay mobile */}
+        <div
+          className={`sidebar-overlay ${sidebarAberto?'aberto':''}`}
+          onClick={()=>setSidebarAberto(false)}
+        />
+
+        <div className={`sidebar ${sidebarAberto?'aberto':''}`}>
           <div className="sidebar-logo">
             <div className="logo-mark">
               <div className="logo-icon">{perfil.nome?.substring(0,1).toUpperCase()}</div>
@@ -1672,18 +1759,20 @@ export default function App() {
             {navItems.map(item=>{
               const showSection=item.section&&item.section!==lastSection;
               if(item.section) lastSection=item.section;
+              const bloqueado = !item.disabled && !podeAcessar(plano, item.key);
               return (
                 <div key={item.key}>
                   {showSection&&<div className="nav-section">{item.section}</div>}
                   <div
                     className={`nav-item ${page===item.key?"active":""} ${item.disabled?"disabled":""}`}
-                    onClick={()=>!item.disabled&&setPage(item.key)}
+                    onClick={()=>{ if(!item.disabled){ setPage(item.key); setSidebarAberto(false); } }}
                     style={item.disabled?{opacity:0.4,cursor:"default"}:{}}
                   >
                     <span className="nav-icon">{item.icon}</span>
                     {item.label}
                     {item.badge&&<span className="nav-badge">{item.badge}</span>}
                     {item.disabled&&<span style={{marginLeft:"auto",fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>EM BREVE</span>}
+                    {bloqueado&&<span style={{marginLeft:"auto",fontSize:12,opacity:0.35}}>🔒</span>}
                   </div>
                 </div>
               );
@@ -1705,6 +1794,16 @@ export default function App() {
         </div>
 
         <div className="main">
+          {/* Header mobile com hamburger */}
+          <div className="mobile-header">
+            <button className="hamburger" onClick={()=>setSidebarAberto(v=>!v)}>
+              <span/><span/><span/>
+            </button>
+            <div style={{fontFamily:"'Playfair Display',serif",color:'var(--gold-light)',fontSize:14,fontWeight:600}}>
+              {perfil.nome||'BarberFlow'}
+            </div>
+            <div style={{width:28}}/>
+          </div>
           {pages[page]||pages["agenda"]}
         </div>
       </div>
