@@ -7,6 +7,7 @@ import ConfiguracaoBarbearia from './pages/ConfiguracaoBarbearia';
 import PageRelatorios from "./pages/PageRelatorios";
 import PageEstoque from "./pages/PageEstoque";
 import PageComandas from "./pages/PageComandas";
+import PageIAInsights from "./pages/PageIAInsights";
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -451,6 +452,186 @@ const css = `
     .mobile-header { display: none; }
     .sidebar-overlay { display: none !important; }
   }
+
+  /* ── Upgrade / Upsell Screens ─────────────────────────── */
+  .upg-wrap {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .upg-bg {
+    position: absolute;
+    inset: 0;
+    padding: 24px 28px;
+    filter: blur(8px);
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+    overflow: hidden;
+  }
+  .upg-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, rgba(26,22,16,0.91) 0%, rgba(28,22,8,0.86) 100%);
+    z-index: 5;
+    padding: 24px;
+  }
+  .upg-card {
+    background: linear-gradient(145deg, #1e1b0f, #252016);
+    border: 1px solid rgba(184,151,58,0.4);
+    border-radius: 20px;
+    padding: 36px 30px;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  @keyframes upg-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.13); }
+  }
+  .upg-icon {
+    font-size: 46px;
+    display: inline-block;
+    animation: upg-pulse 2.5s ease-in-out infinite;
+    margin-bottom: 10px;
+  }
+  .upg-plan-badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #B8973A, #D4AF5A);
+    color: #1A1610;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    padding: 3px 11px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .upg-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 21px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .upg-stat {
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #B8973A, #D4AF5A);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 8px 0 16px;
+    line-height: 1.5;
+  }
+  .upg-list {
+    list-style: none;
+    text-align: left;
+    margin: 0 0 22px;
+  }
+  .upg-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 5px 0;
+    font-size: 13px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.4;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .upg-list li:last-child { border-bottom: none; }
+  .upg-list li::before {
+    content: '✓';
+    color: #B8973A;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .upg-cta {
+    width: 100%;
+    background: linear-gradient(90deg, #B8973A, #D4AF5A);
+    color: #1A1610;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.18s, transform 0.18s;
+  }
+  .upg-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+  .upg-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,0.28);
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+  /* Fake preview cards */
+  .upg-fake-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .upg-fake-card {
+    flex: 1; background: #fff; border: 1px solid #E8E2D4;
+    border-radius: 10px; padding: 12px;
+  }
+  .upg-fake-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 600; color: #1A1610;
+  }
+  .upg-fake-lbl { font-size: 10px; color: #7A7060; margin-top: 2px; }
+  .upg-fake-bars {
+    background: #fff; border: 1px solid #E8E2D4;
+    border-radius: 10px; padding: 12px; margin-bottom: 12px;
+  }
+  .upg-fake-bar-row {
+    display: flex; align-items: flex-end;
+    gap: 6px; height: 70px; margin-top: 8px;
+  }
+  .upg-fake-bar {
+    flex: 1; background: #B8973A; border-radius: 3px 3px 0 0; opacity: 0.5;
+  }
+  .upg-fake-table {
+    background: #fff; border: 1px solid #E8E2D4;
+    border-radius: 10px; overflow: hidden;
+  }
+  .upg-fake-tr {
+    display: flex; gap: 12px; padding: 9px 14px;
+    border-bottom: 1px solid #E8E2D4;
+    font-size: 11px; color: #1A1610;
+  }
+  .upg-fake-tr:last-child { border-bottom: none; }
+  /* AI fake preview */
+  .upg-ai-head {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: #1A1610;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .upg-ai-grid { display: flex; gap: 10px; }
+  .upg-ai-card {
+    flex: 1; background: #fff; border: 1px solid #E8E2D4;
+    border-radius: 10px; padding: 12px;
+  }
+  .upg-ai-card-title {
+    font-size: 12px; font-weight: 600; color: #1A1610;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 5px;
+  }
+  .upg-ai-val { font-size: 18px; font-weight: 700; color: #B8973A; margin-bottom: 4px; }
+  .upg-ai-line {
+    height: 7px; background: #E8E2D4; border-radius: 4px; margin-bottom: 4px;
+  }
+  .upg-ai-tag {
+    display: inline-block; padding: 2px 7px; border-radius: 6px;
+    font-size: 10px; font-weight: 600;
+  }
+  .upg-ai-tag-green { background: #EAF4ED; color: #2D6E3E; }
+  .upg-ai-tag-red { background: #FCEBEB; color: #A32D2D; }
 `;
 
 const horasGrid = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
@@ -1575,32 +1756,197 @@ function PageDashboard() {
 const PLANO_PAGINAS = {
   starter:    new Set(['dashboard','gestao','crm','config']),
   pro:        new Set(['dashboard','gestao','crm','clube','comandas','importador','estoque','financeiro','relatorios','config']),
-  enterprise: new Set(['dashboard','gestao','crm','clube','comandas','importador','estoque','financeiro','relatorios','config']),
+  enterprise: new Set(['dashboard','gestao','crm','clube','comandas','importador','estoque','financeiro','relatorios','ia-insights','config']),
 };
 const PLANO_REQUERIDO_NOME = {
   clube:'Pro', comandas:'Pro', importador:'Pro',
   estoque:'Pro', financeiro:'Pro', relatorios:'Pro',
+  'ia-insights':'Enterprise',
 };
 function podeAcessar(plano, chave) {
   if (!plano) return chave === 'dashboard' || chave === 'config';
   return (PLANO_PAGINAS[plano] || PLANO_PAGINAS.starter).has(chave);
 }
-function PaginaBloqueada({ chave, onConfig }) {
-  const necessario = PLANO_REQUERIDO_NOME[chave] || 'Pro';
+
+// ── Telas de Upsell ──────────────────────────────────────────────
+function FakeBgPro() {
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',padding:40,textAlign:'center'}}>
-      <div style={{fontSize:52,marginBottom:20}}>🔒</div>
-      <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:600,marginBottom:10,color:'var(--text)'}}>
-        Módulo bloqueado
+    <div className="upg-bg">
+      <div className="upg-fake-row">
+        {[['R$ 18.420','Faturamento'],['R$ 89','Ticket médio'],['207','Atendimentos']].map(([v,l])=>(
+          <div key={l} className="upg-fake-card">
+            <div className="upg-fake-num">{v}</div>
+            <div className="upg-fake-lbl">{l}</div>
+          </div>
+        ))}
       </div>
-      <div style={{color:'var(--muted)',fontSize:13,maxWidth:380,marginBottom:28,lineHeight:1.7}}>
-        Este módulo está disponível no plano{' '}
-        <strong style={{color:'var(--text)'}}>BarberFlow {necessario}</strong> ou superior.
-        Faça upgrade para desbloquear todos os recursos.
+      <div className="upg-fake-bars">
+        <div style={{fontSize:11,color:'#7A7060',marginBottom:4}}>Faturamento — últimos 6 meses</div>
+        <div className="upg-fake-bar-row">
+          {[55,70,45,85,60,100].map((h,i)=>(
+            <div key={i} className="upg-fake-bar" style={{height:`${h}%`}}/>
+          ))}
+        </div>
       </div>
-      <button className="btn btn-primary" style={{padding:'10px 28px',fontSize:13}} onClick={onConfig}>
-        Ver planos e fazer upgrade
-      </button>
+      <div className="upg-fake-table">
+        {[['Corte + Barba','R$ 75','32x'],['Pigmentação','R$ 120','18x'],['Hidratação','R$ 90','14x'],['Relaxamento','R$ 150','9x']].map(([s,p,q])=>(
+          <div key={s} className="upg-fake-tr">
+            <span style={{flex:1}}>{s}</span>
+            <span style={{color:'#B8973A',fontWeight:600}}>{p}</span>
+            <span style={{color:'#7A7060'}}>{q}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FakeBgEnterprise() {
+  return (
+    <div className="upg-bg">
+      <div className="upg-ai-head">✨ IA Insights</div>
+      <div className="upg-ai-grid">
+        <div className="upg-ai-card">
+          <div className="upg-ai-card-title">💰 Ticket Médio <span className="upg-ai-tag upg-ai-tag-green">↑ Alta</span></div>
+          <div className="upg-ai-val">R$ 89</div>
+          <div className="upg-ai-line"/>
+          <div className="upg-ai-line" style={{width:'70%'}}/>
+          <div className="upg-ai-line" style={{width:'85%'}}/>
+        </div>
+        <div className="upg-ai-card">
+          <div className="upg-ai-card-title">👥 Clientes em Risco <span className="upg-ai-tag upg-ai-tag-red">8</span></div>
+          <div className="upg-ai-val">2 assinantes</div>
+          <div className="upg-ai-line"/>
+          <div className="upg-ai-line" style={{width:'60%'}}/>
+        </div>
+        <div className="upg-ai-card">
+          <div className="upg-ai-card-title">📈 Tendências</div>
+          <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:4}}>
+            <span className="upg-ai-tag upg-ai-tag-green" style={{alignSelf:'flex-start'}}>↑ Barba +34%</span>
+            <span className="upg-ai-tag upg-ai-tag-red" style={{alignSelf:'flex-start'}}>↓ Corte −12%</span>
+          </div>
+          <div className="upg-ai-line" style={{marginTop:8}}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FakeBgSemPlano() {
+  return (
+    <div className="upg-bg">
+      <div className="upg-fake-row">
+        {[['—','Faturamento'],['—','Clientes'],['—','Agendamentos']].map(([v,l])=>(
+          <div key={l} className="upg-fake-card">
+            <div className="upg-fake-num">{v}</div>
+            <div className="upg-fake-lbl">{l}</div>
+          </div>
+        ))}
+      </div>
+      <div className="upg-fake-bars">
+        <div className="upg-fake-bar-row">
+          {[40,60,35,80,55,90].map((h,i)=>(
+            <div key={i} className="upg-fake-bar" style={{height:`${h}%`}}/>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaginaUpgrade({ chave, plano, onConfig }) {
+  const necessario = PLANO_REQUERIDO_NOME[chave] || 'Pro';
+  const proParaEnterprise = plano === 'pro' && necessario === 'Enterprise';
+  const semPlano = !plano;
+
+  if (proParaEnterprise) {
+    return (
+      <div className="upg-wrap">
+        <FakeBgEnterprise />
+        <div className="upg-overlay">
+          <div className="upg-card">
+            <span className="upg-icon">✨</span>
+            <div className="upg-plan-badge">Enterprise</div>
+            <div className="upg-title">Seus dados estão prontos</div>
+            <div className="upg-stat">
+              A IA identificou 3 oportunidades de crescimento este mês
+            </div>
+            <ul className="upg-list">
+              <li>Ticket médio caiu 10% — saiba exatamente por quê e como reverter</li>
+              <li>2 assinantes do clube há +15 dias sem visitar — risco de cancelamento</li>
+              <li>Barba cresceu 34%, corte simples caiu 12% — reposicione seus combos</li>
+              <li>Recomendações de upsell personalizadas por cliente</li>
+            </ul>
+            <button className="upg-cta" onClick={onConfig}>
+              Desbloquear IA Insights — R$199/mês
+            </button>
+            <div className="upg-hint">Upgrade para Enterprise · Cancele quando quiser</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (semPlano) {
+    return (
+      <div className="upg-wrap">
+        <FakeBgSemPlano />
+        <div className="upg-overlay">
+          <div className="upg-card">
+            <span className="upg-icon">🔐</span>
+            <div className="upg-plan-badge">Assinatura necessária</div>
+            <div className="upg-title">Assine para desbloquear</div>
+            <div className="upg-stat">
+              Você está visualizando o sistema — assine para começar a usar
+            </div>
+            <ul className="upg-list">
+              <li>Agenda completa com gestão de equipe</li>
+              <li>CRM de clientes e histórico de atendimentos</li>
+              <li>Financeiro, relatórios e gestão de estoque</li>
+              <li>Clube de assinaturas para fidelizar clientes</li>
+            </ul>
+            <button className="upg-cta" onClick={onConfig}>
+              Ver planos e assinar agora
+            </button>
+            <div className="upg-hint">A partir de R$49/mês · Cancele quando quiser</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Starter → Pro
+  const featurasPro = {
+    financeiro: ['Fluxo de caixa e DRE mensal','Controle de comissões da equipe','Previsão de faturamento e metas'],
+    relatorios:  ['Relatórios de faturamento em CSV','Análise de clientes e serviços','Histórico completo de comissões'],
+    clube:       ['Planos de assinatura para clientes','Controle de recorrência e inadimplência','Relatório de assinantes ativos'],
+    comandas:    ['Comandas digitais por atendimento','Gestão de produtos e serviços','Fechamento automático de caixa'],
+    estoque:     ['Controle de produtos e insumos','Alertas de estoque baixo','Histórico de movimentações'],
+    importador:  ['Importação em massa via CSV','Migração de clientes de outros sistemas','Merge automático de duplicatas'],
+  };
+  const features = featurasPro[chave] || ['Acesso a todos os módulos Pro','Clientes ilimitados','Suporte prioritário'];
+
+  return (
+    <div className="upg-wrap">
+      <FakeBgPro />
+      <div className="upg-overlay">
+        <div className="upg-card">
+          <span className="upg-icon">🔒</span>
+          <div className="upg-plan-badge">Plano Pro</div>
+          <div className="upg-title">Módulo exclusivo do plano Pro</div>
+          <div className="upg-stat">
+            Barbearias Pro faturam 40% a mais que as do plano Starter
+          </div>
+          <ul className="upg-list">
+            {features.map((f,i) => <li key={i}>{f}</li>)}
+            <li>Automação de WhatsApp e NPS</li>
+          </ul>
+          <button className="upg-cta" onClick={onConfig}>
+            Upgrade para Pro — R$99/mês
+          </button>
+          <div className="upg-hint">Acesso imediato · Cancele quando quiser</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1614,8 +1960,9 @@ const navItems = [
   {key:"importador",label:"Importar clientes", icon:"", section:null},
   {key:"estoque",   label:"Estoque",           icon:"", section:null},
   {key:"financeiro",label:"Financeiro",        icon:"", section:null},
-  {key:"relatorios",label:"Relatórios",        icon:"", section:null},
-  {key:"experiencia",label:"Experiência",      icon:"", section:"Clientes", disabled:true},
+  {key:"relatorios",   label:"Relatórios",    icon:"", section:null},
+  {key:"ia-insights",  label:"IA Insights",   icon:"", badge:"✨", section:null},
+  {key:"experiencia",  label:"Experiência",   icon:"", section:"Clientes", disabled:true},
   {key:"config",    label:"Configurações",     icon:"", section:"Config"},
 ];
 
@@ -1717,7 +2064,7 @@ export default function App() {
 
   const plano = perfil.plano_saas || null;
   const irConfig = () => { setPage('config'); setSidebarAberto(false); };
-  const bloq = (chave, comp) => podeAcessar(plano, chave) ? comp : <PaginaBloqueada chave={chave} onConfig={irConfig} />;
+  const bloq = (chave, comp) => podeAcessar(plano, chave) ? comp : <PaginaUpgrade chave={chave} plano={plano} onConfig={irConfig} />;
 
   const pages = {
     agenda:     bloq('gestao', <PageAgenda perfil={perfil} />),
@@ -1729,8 +2076,9 @@ export default function App() {
     comandas:   bloq('comandas', <PageComandas />),
     dashboard:  <PageDashboard />,
     financeiro: bloq('financeiro', <PageFinanceiro />),
-    relatorios: bloq('relatorios', <PageRelatorios />),
-    config:     <ConfiguracaoBarbearia />,
+    relatorios:    bloq('relatorios', <PageRelatorios />),
+    'ia-insights': bloq('ia-insights', <PageIAInsights />),
+    config:        <ConfiguracaoBarbearia />,
   };
 
   let lastSection = null;
@@ -1770,9 +2118,9 @@ export default function App() {
                   >
                     <span className="nav-icon">{item.icon}</span>
                     {item.label}
-                    {item.badge&&<span className="nav-badge">{item.badge}</span>}
+                    {item.badge&&<span style={{marginLeft:"auto",background:'linear-gradient(90deg,#B8973A,#D4AF5A)',color:'#1A1610',fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:10,letterSpacing:0.5}}>{item.badge}</span>}
                     {item.disabled&&<span style={{marginLeft:"auto",fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:1}}>EM BREVE</span>}
-                    {bloqueado&&<span style={{marginLeft:"auto",fontSize:12,opacity:0.35}}>🔒</span>}
+                    {bloqueado&&!item.badge&&<span style={{marginLeft:"auto",fontSize:12,opacity:0.35}}>🔒</span>}
                   </div>
                 </div>
               );
