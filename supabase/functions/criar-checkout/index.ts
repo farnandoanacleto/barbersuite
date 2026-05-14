@@ -4,9 +4,28 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const PRICE_IDS: Record<string, string> = {
   starter:    'price_1TWi5aR4CkMID6QWkobkxPkD',
-  pro:        'price_1TWi9XR4CkMID6QW6Kbs1JbW',
+  pro:        'price_1TWi9XR4CkMID6Kbs1JbW',
   enterprise: 'price_1TWiB1R4CkMID6QWeleIUtuzf',
 };
+
+// Inicializados uma vez por instância — reutilizados em requests quentes
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+  apiVersion: '2024-06-20',
+  httpClient: Stripe.createFetchHttpClient(),
+});
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+);
+
+function jwtSub(token: string): string {
+  try {
+    return JSON.parse(atob(token.split('.')[1])).sub as string;
+  } catch {
+    return '';
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,39 +36,35 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('Não autorizado');
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-      apiVersion: '2024-06-20',
-      httpClient: Stripe.createFetchHttpClient(),
-    });
+    const token  = authHeader.replace('Bearer ', '');
+    const userId = jwtSub(token);
+    if (!userId) throw new Error('Token inválido');
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error('Usuário não autenticado');
-
-    const { data: perfil } = await supabase
-      .from('barbearia_perfis')
-      .select('id, nome, email, stripe_customer_id')
-      .eq('auth_user_id', user.id)
-      .single();
+    // Parse do body e consulta ao banco em paralelo
+    const [{ plano }, { data: perfil }] = await Promise.all([
+      req.json() as Promise<{ plano: string }>,
+      supabase
+        .from('barbearia_perfis')
+        .select('id, nome, email, stripe_customer_id')
+        .eq('auth_user_id', userId)
+        .single(),
+    ]);
 
     if (!perfil) throw new Error('Perfil não encontrado');
 
-    const { plano } = await req.json();
     const priceId = PRICE_IDS[plano];
     if (!priceId) throw new Error('Plano inválido');
 
-    // Cria ou reutiliza o customer no Stripe
     let customerId: string = perfil.stripe_customer_id;
     if (!customerId) {
+      // Apenas na primeira assinatura: verifica o token e cria o customer
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (!user) throw new Error('Sessão expirada');
+
       const customer = await stripe.customers.create({
         email: perfil.email || user.email,
-        name: perfil.nome,
-        metadata: { supabase_user_id: user.id, perfil_id: String(perfil.id) },
+        name:  perfil.nome,
+        metadata: { supabase_user_id: userId, perfil_id: String(perfil.id) },
       });
       customerId = customer.id;
       await supabase
@@ -69,9 +84,7 @@ Deno.serve(async (req) => {
       cancel_url:  `${origin}?checkout=cancelado`,
       locale: 'pt-BR',
       metadata: { perfil_id: String(perfil.id), plano },
-      subscription_data: {
-        metadata: { perfil_id: String(perfil.id), plano },
-      },
+      subscription_data: { metadata: { perfil_id: String(perfil.id), plano } },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
