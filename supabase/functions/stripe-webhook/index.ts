@@ -3,8 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const PLANOS_POR_PRICE: Record<string, string> = {
   'price_1TWi5aR4CkMID6QWkobkxPkD': 'starter',
-  'price_1TWi9XR4CkMID6Kbs1JbW': 'pro',
-  'price_1TWiB1R4CkMID6QWeleIUtuzf': 'enterprise',
+  'price_1TWi9XR4CkMID6QW6Kbs1JbW': 'pro',
+  'price_1TWiB1R4CkMID6QWeIeUtuzf': 'enterprise',
 };
 
 Deno.serve(async (req) => {

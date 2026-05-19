@@ -1854,10 +1854,16 @@ function FakeBgSemPlano() {
   );
 }
 
-function PaginaUpgrade({ chave, plano, onConfig }) {
+function PaginaUpgrade({ chave, plano, onConfig, onCheckout }) {
+  const [ctaLoading, setCtaLoading] = useState(false);
   const necessario = PLANO_REQUERIDO_NOME[chave] || 'Pro';
   const proParaEnterprise = plano === 'pro' && necessario === 'Enterprise';
   const semPlano = !plano;
+
+  async function iniciarCheckout(planoKey) {
+    setCtaLoading(true);
+    try { await onCheckout(planoKey); } finally { setCtaLoading(false); }
+  }
 
   if (proParaEnterprise) {
     return (
@@ -1877,8 +1883,8 @@ function PaginaUpgrade({ chave, plano, onConfig }) {
               <li>Barba cresceu 34%, corte simples caiu 12% — reposicione seus combos</li>
               <li>Recomendações de upsell personalizadas por cliente</li>
             </ul>
-            <button className="upg-cta" onClick={onConfig}>
-              Desbloquear IA Insights — R$199/mês
+            <button className="upg-cta" onClick={() => iniciarCheckout('enterprise')} disabled={ctaLoading}>
+              {ctaLoading ? 'Redirecionando...' : 'Desbloquear IA Insights — R$199/mês'}
             </button>
             <div className="upg-hint">Upgrade para Enterprise · Cancele quando quiser</div>
           </div>
@@ -2064,7 +2070,17 @@ export default function App() {
 
   const plano = perfil.plano_saas || null;
   const irConfig = () => { setPage('config'); setSidebarAberto(false); };
-  const bloq = (chave, comp) => podeAcessar(plano, chave) ? comp : <PaginaUpgrade chave={chave} plano={plano} onConfig={irConfig} />;
+  async function handleCheckoutPlano(planoKey) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/criar-checkout`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ plano: planoKey }) }
+    );
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  }
+  const bloq = (chave, comp) => podeAcessar(plano, chave) ? comp : <PaginaUpgrade chave={chave} plano={plano} onConfig={irConfig} onCheckout={handleCheckoutPlano} />;
 
   const pages = {
     agenda:     bloq('gestao', <PageAgenda perfil={perfil} />),

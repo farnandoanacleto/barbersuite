@@ -280,6 +280,7 @@ function TabServicos() {
   const [editandoServico, setEditandoServico] = useState(null);
   const [novoServico, setNovoServico] = useState({ nome:'', descricao:'', duracao_min:30, preco:'', categoria:'corte' });
   const [mostrarFormServico, setMostrarFormServico] = useState(false);
+  const [confirmarExcluir, setConfirmarExcluir] = useState(null);
 
   useEffect(() => {
     supabase.from('servicos').select('*').order('nome')
@@ -317,6 +318,13 @@ function TabServicos() {
   async function toggleServico(id, ativo) {
     await supabase.from('servicos').update({ ativo: !ativo }).eq('id', id);
     setServicos(prev => prev.map(s => s.id === id ? {...s, ativo: !ativo} : s));
+  }
+
+  async function excluirServico(id) {
+    const { error } = await supabase.from('servicos').delete().eq('id', id);
+    if (error) { alert('Erro ao excluir serviço: ' + error.message); }
+    else { setServicos(prev => prev.filter(s => s.id !== id)); }
+    setConfirmarExcluir(null);
   }
 
   return (
@@ -380,14 +388,24 @@ function TabServicos() {
             </div>
             <button style={{padding:'5px 10px',borderRadius:5,border:'1px solid #E8E2D4',background:'transparent',fontSize:11,cursor:'pointer'}}
               onClick={()=>{ setEditandoServico({...s}); setMostrarFormServico(true); }}>Editar</button>
+            <button style={{padding:'5px 10px',borderRadius:5,border:'1px solid #A32D2D',background:'transparent',fontSize:11,cursor:'pointer',color:'#A32D2D'}}
+              onClick={()=>setConfirmarExcluir(s.id)}>Excluir</button>
             <button style={{padding:'5px 10px',borderRadius:5,border:'none',background:s.ativo?'#EAF4ED':'#FCEBEB',fontSize:11,cursor:'pointer',color:s.ativo?'#2D6E3E':'#A32D2D'}}
               onClick={()=>toggleServico(s.id, s.ativo)}>{s.ativo?'Ativo':'Inativo'}</button>
           </div>
         ))}
         {servicos.length===0&&(
-          <div style={{padding:24,textAlign:'center',color:'#7A7060',fontSize:13}}>Nenhum servico cadastrado ainda.</div>
+          <div style={{padding:24,textAlign:'center',color:'#7A7060',fontSize:13}}>Nenhum serviço cadastrado ainda.</div>
         )}
       </div>
+      {confirmarExcluir && (
+        <ModalConfirmar
+          titulo="Excluir serviço"
+          texto="Tem certeza que deseja excluir este serviço? Esta ação não pode ser desfeita."
+          onConfirmar={()=>excluirServico(confirmarExcluir)}
+          onCancelar={()=>setConfirmarExcluir(null)}
+        />
+      )}
     </div>
   );
 }
@@ -396,6 +414,7 @@ function TabServicos() {
 function TabPlanos({ planos, setPlanos }) {
   const [modal, setModal] = useState(null);
   const [salvo, setSalvo] = useState(false);
+  const [confirmarExcluir, setConfirmarExcluir] = useState(null);
 
   const salvar = async (form) => {
     const payload = {
@@ -438,7 +457,12 @@ function TabPlanos({ planos, setPlanos }) {
     setTimeout(() => setSalvo(false), 2500);
   };
 
-  const excluir = (id) => setPlanos(p=>p.filter(x=>x.id!==id));
+  async function excluir(id) {
+    const { error } = await supabase.from('planos').delete().eq('id', id);
+    if (error) { alert('Erro ao excluir plano: ' + error.message); }
+    else { setPlanos(p => p.filter(x => x.id !== id)); }
+    setConfirmarExcluir(null);
+  }
   const toggleAtivo = (id) => setPlanos(p=>p.map(x=>x.id===id?{...x,ativo:!x.ativo}:x));
 
   const totalMRR = planos.filter(p=>p.ativo).reduce((a,p)=>a+p.preco,0);
@@ -486,8 +510,9 @@ function TabPlanos({ planos, setPlanos }) {
               <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:12}}>
                 {p.servicos.map(s=><span key={s} className={catClass(s)}>{catLabel(s)}</span>)}
               </div>
-              <div style={{display:'flex',gap:6}}>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 <button className="btn btn-outline" style={{flex:1,fontSize:11,padding:'5px'}} onClick={()=>setModal(p)}>Editar</button>
+                <button className="btn" style={{fontSize:11,padding:'5px 8px',background:'#FCEBEB',color:'#A32D2D',border:'1px solid #A32D2D'}} onClick={()=>setConfirmarExcluir(p.id)}>Excluir</button>
                 <div className="toggle-wrap" onClick={()=>toggleAtivo(p.id)} style={{marginLeft:'auto'}}>
                   <div className={`toggle ${p.ativo?'on':''}`} style={{width:28,height:16}}/>
                 </div>
@@ -502,6 +527,14 @@ function TabPlanos({ planos, setPlanos }) {
       </div>
 
       {modal !== null && <ModalPlano plano={modal} onSave={salvar} onClose={()=>setModal(null)} />}
+      {confirmarExcluir && (
+        <ModalConfirmar
+          titulo="Excluir plano"
+          texto="Tem certeza que deseja excluir este plano? Assinantes existentes não serão afetados, mas o plano não ficará disponível para novos assinantes."
+          onConfirmar={()=>excluir(confirmarExcluir)}
+          onCancelar={()=>setConfirmarExcluir(null)}
+        />
+      )}
     </>
   );
 }
@@ -657,13 +690,6 @@ function TabPerfil({ perfil, setPerfil }) {
 }
 
 // ─── ABA EQUIPE ───────────────────────────────────────────────────────────────
-const initEquipe = [
-  { id:1, nome:'Rafael M.', email:'rafael@grancavalheiro.com', papel:'barbeiro', comissao:40, ativo:true  },
-  { id:2, nome:'Thiago S.', email:'thiago@grancavalheiro.com', papel:'barbeiro', comissao:38, ativo:true  },
-  { id:3, nome:'Bruno K.',  email:'bruno@grancavalheiro.com',  papel:'barbeiro', comissao:40, ativo:true  },
-  { id:4, nome:'Lucas P.',  email:'lucas@grancavalheiro.com',  papel:'barbeiro', comissao:38, ativo:true  },
-  { id:5, nome:'Gerente',   email:'admin@grancavalheiro.com',  papel:'admin',    comissao:0,  ativo:true  },
-];
 
 // ─── ABA BILLING (SAAS) ──────────────────────────────────────────────────────
 function TabBilling({ perfil }) {
@@ -882,50 +908,104 @@ function TabBilling({ perfil }) {
   );
 }
 
-function TabEquipe({ equipe, setEquipe }) {
+function TabEquipe({ perfil }) {
+  const [equipe, setEquipe] = useState([]);
   const [modal, setModal] = useState(null);
+  const [confirmar, setConfirmar] = useState(null);
   const [salvo, setSalvo] = useState(false);
+  const [erroMsg, setErroMsg] = useState('');
 
-  const salvar = (form) => {
-    if (form.id) setEquipe(e=>e.map(x=>x.id===form.id?form:x));
-    else setEquipe(e=>[...e,{...form,id:Date.now()}]);
-    setModal(null); setSalvo(true); setTimeout(()=>setSalvo(false),2500);
-  };
+  async function carregar() {
+    if (!perfil?.tenant_id) return;
+    const { data } = await supabase.from('barbeiros').select('*').eq('tenant_id', perfil.tenant_id).order('created_at');
+    if (data) setEquipe(data);
+  }
+
+  useEffect(() => {
+    if (!perfil?.tenant_id) return;
+    supabase.from('barbeiros').select('*').eq('tenant_id', perfil.tenant_id).order('created_at')
+      .then(({ data }) => { if (data) setEquipe(data); });
+  }, [perfil?.tenant_id]);
+
+  async function salvar(form) {
+    setErroMsg('');
+    if (form.id) {
+      const { error } = await supabase.from('barbeiros').update({
+        nome: form.nome, email: form.email || '', especialidade: form.especialidade || '', ativo: form.ativo,
+      }).eq('id', form.id);
+      if (error) { setErroMsg('Erro ao salvar: ' + error.message); return; }
+    } else {
+      const { error } = await supabase.from('barbeiros').insert({
+        tenant_id: perfil.tenant_id, nome: form.nome, email: form.email || '', especialidade: form.especialidade || '', ativo: true,
+      });
+      if (error) { setErroMsg('Erro ao criar: ' + error.message); return; }
+    }
+    await carregar();
+    setModal(null);
+    setSalvo(true);
+    setTimeout(() => setSalvo(false), 2500);
+  }
+
+  async function excluir(id) {
+    const { error } = await supabase.from('barbeiros').delete().eq('id', id);
+    if (error) setErroMsg('Erro ao excluir: ' + error.message);
+    else await carregar();
+    setConfirmar(null);
+  }
 
   return (
     <>
       {salvo && <div className="alert-box alert-ok">✓ Membro da equipe salvo com sucesso.</div>}
+      {erroMsg && <div className="alert-box" style={{background:'var(--red-b)',border:'1px solid #F09595',color:'var(--red)'}}>{erroMsg}</div>}
       <div className="row-between mb-16">
         <div className="section-title" style={{marginBottom:0}}>Equipe</div>
         <button className="btn btn-primary" onClick={()=>setModal({})}>+ Convidar membro</button>
       </div>
-      <div className="tbl-wrap">
-        <table>
-          <thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Comissão</th><th>Status</th><th>Ações</th></tr></thead>
-          <tbody>
-            {equipe.map(m=>(
-              <tr key={m.id}>
-                <td className="bold">{m.nome}</td>
-                <td className="text-muted">{m.email}</td>
-                <td><span className={`badge ${m.papel==='admin'?'badge-gold':'badge-blue'}`}>{m.papel==='admin'?'Admin':'Barbeiro'}</span></td>
-                <td>{m.papel==='barbeiro'?`${m.comissao}%`:'—'}</td>
-                <td><span className={`badge ${m.ativo?'badge-green':'badge-gray'}`}>{m.ativo?'Ativo':'Inativo'}</span></td>
-                <td>
-                  <button className="btn btn-outline" style={{padding:'4px 10px',fontSize:11}} onClick={()=>setModal(m)}>Editar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
-      {modal!==null && (
+      {equipe.length === 0 ? (
+        <div style={{textAlign:'center',padding:'48px 24px',background:'#fff',border:'1px solid var(--bord)',borderRadius:12}}>
+          <div style={{fontSize:36,marginBottom:12}}>👥</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:600,marginBottom:8}}>Nenhum membro cadastrado</div>
+          <div style={{fontSize:13,color:'var(--muted)',marginBottom:20}}>Convide seu primeiro barbeiro para começar a gerenciar a equipe.</div>
+          <button className="btn btn-primary" onClick={()=>setModal({})}>+ Convidar membro</button>
+        </div>
+      ) : (
+        <div className="tbl-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Especialidade</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {equipe.map(m=>(
+                <tr key={m.id}>
+                  <td className="bold">{m.nome}</td>
+                  <td className="text-muted">{m.email || '—'}</td>
+                  <td>{m.especialidade || '—'}</td>
+                  <td><span className={`badge ${m.ativo?'badge-green':'badge-gray'}`}>{m.ativo?'Ativo':'Inativo'}</span></td>
+                  <td style={{display:'flex',gap:6}}>
+                    <button className="btn btn-outline" style={{padding:'4px 10px',fontSize:11}} onClick={()=>setModal(m)}>Editar</button>
+                    <button className="btn" style={{padding:'4px 10px',fontSize:11,background:'var(--red-b)',color:'var(--red)',border:'1px solid var(--red)'}} onClick={()=>setConfirmar(m.id)}>Excluir</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal !== null && (
         <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
           <div className="modal">
-            <div className="modal-title">{modal.id?'Editar membro':'Convidar membro'}</div>
+            <div className="modal-title">{modal.id ? 'Editar membro' : 'Convidar membro'}</div>
             <ModalEquipe membro={modal} onSave={salvar} onClose={()=>setModal(null)} />
           </div>
         </div>
+      )}
+      {confirmar && (
+        <ModalConfirmar
+          titulo="Excluir membro da equipe"
+          texto="Tem certeza que deseja excluir este membro? Esta ação não pode ser desfeita."
+          onConfirmar={()=>excluir(confirmar)}
+          onCancelar={()=>setConfirmar(null)}
+        />
       )}
     </>
   );
@@ -1051,32 +1131,42 @@ function TabAutomacoes({ perfil }) {
 }
 
 function ModalEquipe({membro, onSave, onClose}) {
-  const [form, setForm] = useState(membro||{nome:'',email:'',papel:'barbeiro',comissao:40,ativo:true});
+  const [form, setForm] = useState(membro || {nome:'', email:'', especialidade:'', ativo:true});
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   return (
     <>
       <div className="form-group"><label className="form-label">Nome</label><input className="form-input" value={form.nome} onChange={e=>set('nome',e.target.value)}/></div>
-      <div className="form-group"><label className="form-label">E-mail</label><input className="form-input" type="email" value={form.email} onChange={e=>set('email',e.target.value)}/></div>
-      <div className="form-grid-2">
+      <div className="form-group"><label className="form-label">E-mail</label><input className="form-input" type="email" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
+      <div className="form-group"><label className="form-label">Especialidade</label><input className="form-input" placeholder="Ex: Fade, Barba clássica" value={form.especialidade||''} onChange={e=>set('especialidade',e.target.value)}/></div>
+      {form.id && (
         <div className="form-group">
-          <label className="form-label">Papel</label>
-          <select className="form-select" value={form.papel} onChange={e=>set('papel',e.target.value)}>
-            <option value="barbeiro">Barbeiro</option>
-            <option value="admin">Admin</option>
+          <label className="form-label">Status</label>
+          <select className="form-select" value={form.ativo?'1':'0'} onChange={e=>set('ativo',e.target.value==='1')}>
+            <option value="1">Ativo</option>
+            <option value="0">Inativo</option>
           </select>
         </div>
-        {form.papel==='barbeiro' && (
-          <div className="form-group">
-            <label className="form-label">Comissão (%)</label>
-            <input className="form-input" type="number" value={form.comissao} onChange={e=>set('comissao',Number(e.target.value))} min={0} max={100}/>
-          </div>
-        )}
-      </div>
+      )}
       <div className="modal-footer">
         <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
-        <button className="btn btn-primary" onClick={()=>onSave(form)} disabled={!form.nome||!form.email}>{form.id?'Salvar':'Convidar'}</button>
+        <button className="btn btn-primary" onClick={()=>onSave(form)} disabled={!form.nome}>{form.id?'Salvar':'Adicionar'}</button>
       </div>
     </>
+  );
+}
+
+function ModalConfirmar({ titulo, texto, onConfirmar, onCancelar }) {
+  return (
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onCancelar()}>
+      <div className="modal" style={{maxWidth:400}}>
+        <div className="modal-title">{titulo}</div>
+        <p style={{fontSize:13,color:'var(--muted)',lineHeight:1.65,marginBottom:20}}>{texto}</p>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onCancelar}>Cancelar</button>
+          <button className="btn" style={{background:'var(--red)',color:'#fff'}} onClick={onConfirmar}>Excluir</button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1113,7 +1203,6 @@ export default function ConfiguracaoBarbearia() {
   const [perfil, setPerfil] = useState(initPerfil);
   const [servicos, setServicos] = useState(initServicos);
   const [planos, setPlanos] = useState(initPlanos);
-  const [equipe, setEquipe] = useState(initEquipe);
 
   useEffect(() => {
     async function carregarDados() {
@@ -1226,7 +1315,7 @@ export default function ConfiguracaoBarbearia() {
           <div className="cfg-content">
             {aba==='servicos' && <TabServicos servicos={servicos} setServicos={setServicos} />}
             {aba==='planos'   && <TabPlanos planos={planos} setPlanos={setPlanos} />}
-            {aba==='equipe'   && <TabEquipe equipe={equipe} setEquipe={setEquipe} />}
+            {aba==='equipe'   && <TabEquipe perfil={perfil} />}
             {aba==='perfil'   && <TabPerfil perfil={perfil} setPerfil={setPerfil} />}
             {aba==='automacoes' && <TabAutomacoes perfil={perfil} />}
             {aba==='billing'    && <TabBilling perfil={perfil} />}

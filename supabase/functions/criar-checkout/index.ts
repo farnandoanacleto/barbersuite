@@ -4,8 +4,8 @@ import { corsHeaders } from '../_shared/cors.ts';
 
 const PRICE_IDS: Record<string, string> = {
   starter:    'price_1TWi5aR4CkMID6QWkobkxPkD',
-  pro:        'price_1TWi9XR4CkMID6Kbs1JbW',
-  enterprise: 'price_1TWiB1R4CkMID6QWeleIUtuzf',
+  pro:        'price_1TWi9XR4CkMID6QW6Kbs1JbW',
+  enterprise: 'price_1TWiB1R4CkMID6QWeIeUtuzf',
 };
 
 // Inicializados uma vez por instância — reutilizados em requests quentes
