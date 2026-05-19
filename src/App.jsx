@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from "react";
 import { supabase } from "./lib/supabase";
+import { CalendarCheck, Users, Star, Gift, CalendarOff, BellOff, Sparkles, Upload } from 'lucide-react';
 import ImportadorClientes from "./ImportadorClientes";
 import PageFinanceiro from "./pages/PageFinanceiro";
 import AuthBarbearia from './pages/AuthBarbearia';
@@ -265,7 +266,7 @@ const css = `
     cursor: pointer; border: 1px solid var(--border); background: var(--white);
     color: var(--muted); transition: all 0.15s;
   }
-  .day-pill.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+  .day-pill.active { background: #c9a227; color: #1a1610; border-color: #c9a227; font-weight: 600; }
   .day-pill:hover:not(.active) { border-color: var(--border-strong); color: var(--text); }
 
   .schedule-grid {
@@ -891,7 +892,7 @@ function PageAgenda({ perfil }) {
                   <div className="sg-slots">{p.especialidade}</div>
                 </div>
               ))}
-              {profissionaisDB.length === 0 && <div className="sg-header"><div className="sg-barber">Nenhum barbeiro ativo</div></div>}
+              {profissionaisDB.length === 0 && <div className="sg-header"><div className="sg-barber" style={{color:'var(--muted)',fontWeight:400}}>Nenhum barbeiro ativo</div></div>}
               
               {HORARIOS.map(hora => (
                 <Fragment key={hora}>
@@ -1347,7 +1348,7 @@ function ModalEditarPreferencias({ cliente, onClose, onSalvar }) {
   );
 }
 
-function PageCRM() {
+function PageCRM({ onIrImportador }) {
   const [lista, setLista] = useState([]);
   const [selected, setSelected] = useState(null);
   const [modalClienteAberto, setModalClienteAberto] = useState(false);
@@ -1453,7 +1454,7 @@ function PageCRM() {
       <div className="topbar">
         <div>
           <div className="page-heading">Clientes</div>
-          <div className="page-sub">CRM e historico de atendimento</div>
+          <div className="page-sub">CRM e histórico de atendimento</div>
         </div>
         <div className="topbar-right">
           <button className="btn btn-primary" onClick={()=>setModalClienteAberto(true)}>+ Novo cliente</button>
@@ -1461,6 +1462,17 @@ function PageCRM() {
       </div>
 
       <div className="content" style={{padding:20}}>
+        {lista.length === 0 ? (
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px 24px',textAlign:'center'}}>
+            <Users size={52} color="#B4AFA5" style={{marginBottom:16}} />
+            <div style={{fontSize:20,fontWeight:600,fontFamily:"'Playfair Display',serif",marginBottom:8}}>Nenhum cliente cadastrado ainda</div>
+            <div style={{fontSize:13,color:'#7A7060',marginBottom:24,maxWidth:380,lineHeight:1.6}}>Importe sua base atual ou adicione clientes manualmente para começar a usar o CRM.</div>
+            <div style={{display:'flex',gap:10}}>
+              <button className="btn btn-outline" onClick={onIrImportador}>Importar clientes</button>
+              <button className="btn btn-primary" onClick={()=>setModalClienteAberto(true)}>+ Adicionar manualmente</button>
+            </div>
+          </div>
+        ) : (
         <div className="crm-layout">
           <div className="client-list-wrap">
             <div className="client-search-wrap">
@@ -1564,6 +1576,8 @@ function PageCRM() {
         )}
       </div>
         </div>
+        </div>
+        )}
       </div>
 
       {modalClienteAberto&&(
@@ -1598,153 +1612,159 @@ function PageCRM() {
   );
 }
 
-function PageDashboard() {
+function PageDashboard({ onIrAgenda }) {
   const [mesFiltro, setMesFiltro] = useState(new Date().toISOString().slice(0,7));
   const [totalAgendamentos, setTotalAgendamentos] = useState(0);
-  const [totalDespesas, setTotalDespesas] = useState(0);
   const [totalClientes, setTotalClientes] = useState(0);
   const [npsScore, setNpsScore] = useState(0);
   const [totalGiftCards, setTotalGiftCards] = useState(0);
   const [ultimosAgendamentos, setUltimosAgendamentos] = useState([]);
-  const [alertas, setAlertas] = useState([]);
   const [perfil, setPerfil] = useState({ slug: 'carregando...', nome: '' });
+  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     supabase.from('barbearia_perfis').select('slug, nome').single()
       .then(({ data }) => { if (data) setPerfil(data); });
 
     const inicioMes = mesFiltro + '-01T00:00:00';
-    const fimMes = mesFiltro + '-31T23:59:59';
+    const fimMes   = mesFiltro + '-31T23:59:59';
 
-    // 1. Total agendamentos do mes
     supabase.from('agendamentos').select('*', { count: 'exact' })
       .gte('inicio', inicioMes).lte('inicio', fimMes)
       .then(({ count }) => setTotalAgendamentos(count || 0));
 
-    // 2. Total despesas do mes (fallback se a tabela existir)
-    supabase.from('pagamentos').select('valor')
-      .eq('status', 'pago')
-      .gte('pago_em', inicioMes).lte('pago_em', fimMes)
-      .then(({ data }) => setTotalDespesas((data || []).reduce((s,d) => s + Number(d.valor), 0)));
-
-    // 3. Total clientes
     supabase.from('usuarios').select('*', { count: 'exact' }).eq('papel', 'cliente')
       .then(({ count }) => setTotalClientes(count || 0));
 
-    // 4. NPS Médio (via função RPC dinâmica)
     supabase.rpc('fn_tenant_id_atual').then(({ data: tId }) => {
-      if (tId) {
-        supabase.rpc('fn_nps_medio', { p_tenant_id: tId })
-          .then(({ data }) => setNpsScore(data?.nps_score || 0));
-      }
+      if (tId) supabase.rpc('fn_nps_medio', { p_tenant_id: tId })
+        .then(({ data }) => setNpsScore(data?.nps_score || 0));
     });
 
-    // 5. Total Gift Cards
-    supabase.from('gift_cards').select('valor', { count: 'exact' })
+    supabase.from('gift_cards').select('*', { count: 'exact' })
       .gte('criado_em', inicioMes).lte('criado_em', fimMes)
       .then(({ count }) => setTotalGiftCards(count || 0));
 
-    // 6. Ultimos agendamentos
     supabase.from('agendamentos')
-      .select('*, usuarios:cliente_id(nome), servicos(nome), profissionais(usuario_id)')
+      .select('*, usuarios:cliente_id(nome), servicos(nome)')
       .order('inicio', { ascending: false }).limit(5)
       .then(({ data }) => {
         setUltimosAgendamentos((data || []).map(a => ({
           id: a.id,
-          dia: new Date(a.inicio).toLocaleDateString('pt-BR'),
-          hora: new Date(a.inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          dia:  new Date(a.inicio).toLocaleDateString('pt-BR'),
+          hora: new Date(a.inicio).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }),
           cliente_nome: a.usuarios?.nome || 'Cliente',
-          servico_nome: a.servicos?.nome || 'Serviço',
-          barbeiro_nome: 'Equipe'
+          servico_nome: a.servicos?.nome  || 'Serviço',
         })));
       });
-
-    // 7. Alertas — clientes sem visita ha mais de 30 dias
-    setAlertas([
-      { cor: 'var(--gold)', text: 'NPS em alta (+12%)', sub: 'Meta de satisfação batida' },
-      { cor: 'var(--blue)', text: '3 novos Gift Cards hoje', sub: 'Receita antecipada em R$450' }
-    ]);
   }, [mesFiltro]);
+
+  function copiarLink() {
+    navigator.clipboard.writeText(`https://barberflow.app/${perfil.slug}`);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
+
+  const kpis = [
+    { label:'Agendamentos', value:totalAgendamentos,   sub:'no mês',         Icon:CalendarCheck, cor:'#c9a227', bg:'rgba(201,162,39,0.1)'  },
+    { label:'Clientes',     value:totalClientes,       sub:'base ativa',     Icon:Users,         cor:'#1d9e75', bg:'rgba(29,158,117,0.1)'  },
+    { label:'Score NPS',    value:npsScore || '—',     sub:'média 90 dias',  Icon:Star,          cor:'#378add', bg:'rgba(55,138,221,0.1)'  },
+    { label:'Gift Cards',   value:totalGiftCards,      sub:'vendidos no mês',Icon:Gift,          cor:'#d85a30', bg:'rgba(216,90,48,0.1)'   },
+  ];
 
   return (
     <>
+      <style>{`@keyframes db-pulse{0%,100%{opacity:1}50%{opacity:0.3}}.db-live-dot{width:6px;height:6px;border-radius:50%;background:#c9a227;animation:db-pulse 1.5s ease-in-out infinite;flex-shrink:0}`}</style>
+
+      {/* Topbar */}
       <div className="topbar">
         <div>
-          <div className="page-heading">Dashboard da equipe</div>
+          <div className="page-heading">Dashboard</div>
           <div className="page-sub">Performance em tempo real</div>
         </div>
         <div className="topbar-right">
           <input type="month" value={mesFiltro} onChange={e=>setMesFiltro(e.target.value)}
             style={{padding:'7px 12px',border:'1px solid #E8E2D4',borderRadius:6,fontSize:13,outline:'none',fontFamily:'DM Sans,sans-serif'}} />
-          <Badge tipo="gold">Ao vivo</Badge>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',border:'1px solid rgba(201,162,39,0.4)',borderRadius:6,fontSize:11,fontWeight:600,color:'#c9a227',background:'rgba(201,162,39,0.07)'}}>
+            <div className="db-live-dot" />Ao vivo
+          </div>
           <button className="btn btn-outline">Exportar</button>
         </div>
       </div>
 
       <div className="content" style={{padding:20}}>
-        {/* Link do PWA Quick Access */}
-        <div className="card" style={{marginBottom:16, background:'#FAF0D4', border:'1px solid #B8973A', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 20px'}}>
-          <div style={{display:'flex', alignItems:'center', gap:12}}>
-            <div style={{fontSize:24}}>📱</div>
-            <div>
-              <div style={{fontSize:13, fontWeight:700, color:'#854F0B'}}>Link do seu App Cliente</div>
-              <div style={{fontSize:11, color:'#854F0B'}}>Envie este link para seus clientes agendarem online.</div>
-            </div>
+
+        {/* Banner App Cliente — compacto */}
+        <div style={{display:'flex',alignItems:'center',gap:14,background:'#fff',border:'1px solid #E8E2D4',borderLeft:'3px solid #c9a227',borderRadius:8,padding:'10px 16px',marginBottom:16}}>
+          <span style={{fontSize:20,flexShrink:0}}>📱</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#1A1610'}}>Link do App Cliente</div>
+            <div style={{fontSize:11,color:'#7A7060'}}>Compartilhe com seus clientes para agendamento online</div>
           </div>
-          <div style={{display:'flex', gap:8, alignItems:'center'}}>
-            <div style={{background:'#fff', padding:'6px 12px', borderRadius:6, border:'1px solid #E8E2D4', fontSize:12, fontWeight:600, color:'#B8973A', fontFamily:'monospace'}}>
-              barberflow.app/{perfil.slug}
-            </div>
-            <button className="btn btn-outline" style={{background:'#fff'}} onClick={() => {
-              navigator.clipboard.writeText(`https://barberflow.app/${perfil.slug}`);
-              alert("Link copiado para a área de transferência!");
-            }}>📋 Copiar</button>
-            <button className="btn btn-primary" onClick={() => {
-              const msg = window.encodeURIComponent(`Olá! Agora você pode agendar seu horário na ${perfil.nome} direto pelo nosso aplicativo: https://barberflow.app/${perfil.slug}`);
-              window.open(`https://wa.me/?text=${msg}`, '_blank');
-            }}>💬 Mandar no WhatsApp</button>
-          </div>
+          <code style={{fontSize:12,color:'#B8973A',background:'#FAF0D4',padding:'4px 10px',borderRadius:5,whiteSpace:'nowrap',flexShrink:0}}>
+            barberflow.app/{perfil.slug}
+          </code>
+          <button className="btn btn-outline" style={{flexShrink:0,fontSize:11,padding:'5px 12px'}} onClick={copiarLink}>
+            {copiado ? '✓ Copiado' : '📋 Copiar'}
+          </button>
+          <button className="btn btn-primary" style={{flexShrink:0,fontSize:11,padding:'5px 12px',background:'#25D366',color:'#fff',border:'none'}} onClick={() => {
+            const msg = encodeURIComponent(`Olá! Agora você pode agendar seu horário na ${perfil.nome} direto pelo nosso aplicativo: https://barberflow.app/${perfil.slug}`);
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
+          }}>💬 WhatsApp</button>
         </div>
 
+        {/* KPI Cards */}
         <div className="stat-grid stat-grid-4 mb-16">
-          <StatCard label="Agendamentos do mês" value={totalAgendamentos} trend="total no periodo" />
-          <StatCard label="Clientes total" value={totalClientes} trend="Base ativa" />
-          <StatCard label="Score NPS" value={npsScore} trend="Média 90 dias" color="var(--green)" />
-          <StatCard label="Gift Cards" value={totalGiftCards} trend="Vendidos no mes" color="var(--gold)" />
+          {kpis.map(k => (
+            <div key={k.label} style={{background:'#fff',border:'0.5px solid #E8E2D4',borderRadius:10,padding:16}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.7px',color:'#7A7060'}}>{k.label}</div>
+                <div style={{width:32,height:32,borderRadius:8,background:k.bg,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <k.Icon size={16} color={k.cor} />
+              </div>
+              </div>
+              <div style={{fontSize:28,fontWeight:500,color:'#1A1610',lineHeight:1,marginBottom:4}}>{k.value}</div>
+              <div style={{fontSize:11,color:'#B4AFA5'}}>{k.sub}</div>
+            </div>
+          ))}
         </div>
 
         <div className="two-col">
+          {/* Últimos agendamentos */}
           <div className="card">
             <div className="section-title mb-12">Últimos agendamentos</div>
-            {ultimosAgendamentos.length === 0 && (
-              <div style={{color:'var(--muted)',fontSize:13,textAlign:'center',padding:16}}>Nenhum agendamento no periodo.</div>
-            )}
-            {ultimosAgendamentos.map((a,i)=>(
+            {ultimosAgendamentos.length === 0 ? (
+              <div style={{textAlign:'center',padding:'28px 16px'}}>
+                <CalendarOff size={36} color="#B4AFA5" style={{marginBottom:12}} />
+                <div style={{fontSize:13,fontWeight:600,color:'#1A1610',marginBottom:4}}>Nenhum agendamento ainda</div>
+                <div style={{fontSize:12,color:'#7A7060',marginBottom:16}}>Os agendamentos do mês aparecem aqui.</div>
+                <button className="btn btn-primary" style={{fontSize:12}} onClick={onIrAgenda}>+ Novo agendamento</button>
+              </div>
+            ) : ultimosAgendamentos.map(a => (
               <div key={a.id} className="timeline-item">
                 <div className="timeline-dot" />
                 <div className="timeline-date">{a.dia}</div>
                 <div>
                   <div className="timeline-desc">{a.cliente_nome}</div>
-                  <div className="timeline-sub">{a.servico_nome || a.servico} · {a.barbeiro_nome} · {a.hora}</div>
+                  <div className="timeline-sub">{a.servico_nome} · {a.hora}</div>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Alertas inteligentes */}
           <div className="card">
-            <div className="section-title mb-12">Alertas inteligentes</div>
-            {alertas.length === 0 && (
-              <div style={{color:'var(--muted)',fontSize:13,textAlign:'center',padding:16}}>Nenhum alerta no momento.</div>
-            )}
-            {alertas.map((a,i)=>(
-              <div key={i} className="alert-item">
-                <div className="alert-dot" style={{background:a.cor}} />
-                <div>
-                  <div className="alert-text">{a.text}</div>
-                  <div className="alert-sub">{a.sub}</div>
-                </div>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+              <div className="section-title" style={{margin:0}}>Alertas inteligentes</div>
+              <div style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(201,162,39,0.1)',border:'1px solid rgba(201,162,39,0.3)',borderRadius:10,padding:'2px 7px',fontSize:9,fontWeight:700,letterSpacing:0.5,color:'#c9a227'}}>✦ IA</div>
+            </div>
+            <div style={{textAlign:'center',padding:'28px 16px'}}>
+              <BellOff size={36} color="#B4AFA5" style={{marginBottom:12}} />
+              <div style={{fontSize:13,fontWeight:600,color:'#1A1610',marginBottom:4}}>Nenhum alerta no momento</div>
+              <div style={{fontSize:12,color:'#7A7060',lineHeight:1.6,maxWidth:220,margin:'0 auto'}}>
+                Os alertas aparecem conforme você usa o sistema. Ative os IA Insights para recomendações automáticas.
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
@@ -2086,11 +2106,11 @@ export default function App() {
     agenda:     bloq('gestao', <PageAgenda perfil={perfil} />),
     gestao:     bloq('gestao', <PageAgenda perfil={perfil} />),
     clube:      bloq('clube', <PageClube />),
-    crm:        bloq('crm', <PageCRM />),
+    crm:        bloq('crm', <PageCRM onIrImportador={() => { setPage('importador'); setSidebarAberto(false); }} />),
     importador: bloq('importador', <ImportadorClientes onImportarConcluido={()=>setPage("crm")} />),
     estoque:    bloq('estoque', <PageEstoque />),
     comandas:   bloq('comandas', <PageComandas />),
-    dashboard:  <PageDashboard />,
+    dashboard:  <PageDashboard onIrAgenda={() => { setPage('agenda'); setSidebarAberto(false); }} />,
     financeiro: bloq('financeiro', <PageFinanceiro />),
     relatorios:    bloq('relatorios', <PageRelatorios />),
     'ia-insights': bloq('ia-insights', <PageIAInsights />),

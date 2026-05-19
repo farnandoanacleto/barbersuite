@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { Upload } from 'lucide-react';
 
 // ─── ESTILOS ─────────────────────────────────────────────────────────────────
 const css = `
@@ -44,7 +45,7 @@ const css = `
     transition: all 0.2s; background: var(--white);
   }
   .dropzone:hover, .dropzone.drag { border-color: var(--gold); background: var(--gold-pale); }
-  .dropzone-icon { font-size: 40px; margin-bottom: 14px; }
+  .dropzone-icon { margin-bottom: 14px; display: flex; justify-content: center; }
   .dropzone-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; margin-bottom: 8px; }
   .dropzone-sub { font-size: 13px; color: var(--muted); }
   .dropzone-formats { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
@@ -476,7 +477,7 @@ export default function ImportadorClientes({ onImportarConcluido }) {
             onDragLeave={() => setDrag(false)}
             onDrop={onDrop}
           >
-            <div className="dropzone-icon">📥</div>
+            <div className="dropzone-icon"><Upload size={40} color="#c9a227" /></div>
             <div className="dropzone-title">Arraste o arquivo ou clique para selecionar</div>
             <div className="dropzone-sub">Exportado do seu sistema atual — qualquer formato funciona</div>
             <div className="dropzone-formats">

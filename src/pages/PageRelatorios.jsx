@@ -127,8 +127,8 @@ export default function PageRelatorios() {
     },
     {
       key: 'comissoes',
-      titulo: 'Comissoes',
-      descricao: 'Comissoes por barbeiro no periodo selecionado com faturamento base e valor pago.',
+      titulo: 'Comissões',
+      descricao: 'Comissões por barbeiro no período selecionado com faturamento base e valor pago.',
       acao: gerarComissoes,
       usaFiltro: true,
     },

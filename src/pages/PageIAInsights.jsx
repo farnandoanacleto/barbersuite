@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { Sparkles } from 'lucide-react';
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -294,14 +295,14 @@ export default function PageIAInsights() {
 
         <div className="ia-header">
           <div>
-            <div className="ia-title">✨ IA Insights</div>
+            <div className="ia-title" style={{display:'flex',alignItems:'center',gap:8}}><Sparkles size={20} color="#B8973A" /> IA Insights</div>
             <div className="ia-sub">Análise inteligente dos seus dados gerada por Claude AI</div>
             <div className="ia-enterprise-badge">✦ Enterprise</div>
           </div>
           <button className="ia-btn" onClick={gerarInsights} disabled={loading}>
             {loading
               ? <><span className="ia-dot">●</span><span className="ia-dot">●</span><span className="ia-dot">●</span>&nbsp;Analisando...</>
-              : <>✨ Gerar Insights</>
+              : <><Sparkles size={14} /> Gerar Insights</>
             }
           </button>
         </div>
@@ -316,7 +317,7 @@ export default function PageIAInsights() {
               Clique em "Gerar Insights" para que a IA analise seus agendamentos, clientes e serviços dos últimos 2 meses e entregue recomendações personalizadas para você faturar mais.
             </div>
             <button className="ia-btn" onClick={gerarInsights} style={{ margin: '0 auto', display: 'inline-flex' }}>
-              ✨ Gerar meus primeiros insights
+              <Sparkles size={14} /> Gerar meus primeiros insights
             </button>
           </div>
         )}

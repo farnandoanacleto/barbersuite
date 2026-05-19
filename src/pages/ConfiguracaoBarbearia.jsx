@@ -713,7 +713,7 @@ function TabBilling({ perfil }) {
     if (!perfil.tenant_id) return;
     supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('papel', 'cliente').eq('tenant_id', perfil.tenant_id)
       .then(({ count }) => setStats(s => ({ ...s, clientes: count || 0 })));
-    supabase.from('usuarios').select('*', { count: 'exact', head: true }).eq('papel', 'barbeiro').eq('tenant_id', perfil.tenant_id)
+    supabase.from('barbeiros').select('*', { count: 'exact', head: true }).eq('tenant_id', perfil.tenant_id).eq('ativo', true)
       .then(({ count }) => setStats(s => ({ ...s, equipe: count || 0 })));
     const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
     supabase.from('agendamentos').select('*', { count: 'exact', head: true }).eq('tenant_id', perfil.tenant_id).gte('data_hora', inicioMes.toISOString())

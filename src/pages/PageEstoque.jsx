@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { Package } from 'lucide-react';
 
 function Badge({ tipo, children }) {
   return <span className={`badge badge-${tipo}`}>{children}</span>;
@@ -115,8 +116,11 @@ export default function PageEstoque() {
             <tbody>
               {produtos.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-                    Nenhum produto cadastrado no estoque.
+                  <td colSpan={5} style={{ padding: '48px 24px', textAlign: 'center' }}>
+                    <Package size={44} color="#B4AFA5" style={{ marginBottom: 12 }} />
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Nenhum produto cadastrado no estoque</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>Adicione seu primeiro produto para controlar o estoque.</div>
+                    <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => setModalProduto(true)}>+ Novo Produto</button>
                   </td>
                 </tr>
               )}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { Receipt } from 'lucide-react';
 
 function Badge({ tipo, children }) {
   return <span className={`badge badge-${tipo}`}>{children}</span>;
@@ -194,8 +195,11 @@ export default function PageComandas() {
 
       <div className="content" style={{ padding: 20 }}>
         {comandas.length === 0 && (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', background: 'var(--white)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
-            Nenhuma comanda aberta no momento.
+          <div style={{ padding: '60px 24px', textAlign: 'center', background: 'var(--white)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+            <Receipt size={48} color="#B4AFA5" style={{ marginBottom: 16 }} />
+            <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "'Playfair Display',serif", marginBottom: 8 }}>Nenhuma comanda aberta no momento</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>As comandas abertas aparecem aqui em tempo real.</div>
+            <button className="btn btn-primary" style={{ fontSize: 12 }} onClick={() => setModalAberto(true)}>+ Nova Comanda</button>
           </div>
         )}
         

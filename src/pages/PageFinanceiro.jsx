@@ -51,7 +51,7 @@ export default function PageFinanceiro() {
       <div style={{background:'#fff',borderBottom:'1px solid #E8E2D4',padding:'14px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
         <div>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:600}}>Financeiro</div>
-          <div style={{fontSize:12,color:'#7A7060',marginTop:1}}>Despesas e comissoes</div>
+          <div style={{fontSize:12,color:'#7A7060',marginTop:1}}>Despesas e comissões</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
           <input type="month" value={mesFiltro} onChange={e=>setMesFiltro(e.target.value)}
@@ -66,21 +66,26 @@ export default function PageFinanceiro() {
       <div style={{flex:1,overflowY:'auto',padding:20}}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
           {[
-            {label:'Despesas do mes', value:`R$ ${totalDespesas.toLocaleString('pt-BR',{minimumFractionDigits:2})}`, color:'var(--red)'},
-            {label:'Comissoes do mes', value:`R$ ${totalComissoes.toLocaleString('pt-BR',{minimumFractionDigits:2})}`, color:'var(--amber)'},
-            {label:'Total saidas', value:`R$ ${(totalDespesas+totalComissoes).toLocaleString('pt-BR',{minimumFractionDigits:2})}`, color:'var(--text)'},
-          ].map(c=>(
-            <div key={c.label} style={{background:'#fff',border:'1px solid #E8E2D4',borderRadius:10,padding:16}}>
-              <div style={{fontSize:11,color:'#7A7060',textTransform:'uppercase',letterSpacing:'0.5px',marginBottom:4}}>{c.label}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:600,color:c.color}}>{c.value}</div>
-            </div>
-          ))}
+            {label:'Despesas do mês',   raw:totalDespesas},
+            {label:'Comissões do mês',  raw:totalComissoes},
+            {label:'Total de saídas',   raw:totalDespesas+totalComissoes},
+          ].map(c=>{
+            const cor = c.raw === 0 ? '#B4AFA5' : c.raw > 0 ? '#1d9e75' : '#d85a30';
+            return (
+              <div key={c.label} style={{background:'#fff',border:'1px solid #E8E2D4',borderRadius:10,padding:16}}>
+                <div style={{fontSize:11,color:'#7A7060',textTransform:'uppercase',letterSpacing:'0.5px',marginBottom:4}}>{c.label}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:600,color:cor}}>
+                  R$ {c.raw.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div style={{display:'flex',gap:8,marginBottom:16}}>
-          {['despesas','comissoes'].map(a=>(
+          {[['despesas','Despesas'],['comissoes','Comissões']].map(([a,label])=>(
             <button key={a} style={{padding:'7px 18px',borderRadius:20,border:'1px solid #E8E2D4',background:aba===a?'#1A1610':'transparent',color:aba===a?'#fff':'#7A7060',fontSize:12,cursor:'pointer',fontWeight:500}}
-              onClick={()=>setAba(a)}>{a.charAt(0).toUpperCase()+a.slice(1)}</button>
+              onClick={()=>setAba(a)}>{label}</button>
           ))}
         </div>
 
@@ -89,7 +94,7 @@ export default function PageFinanceiro() {
             <table style={{width:'100%',borderCollapse:'collapse'}}>
               <thead>
                 <tr style={{background:'#FAFAF8'}}>
-                  {['Descricao','Categoria','Competencia','Valor','Recorrente',''].map(h=>(
+                  {['Descrição','Categoria','Competência','Valor','Recorrente',''].map(h=>(
                     <th key={h} style={{padding:'10px 16px',textAlign:'left',fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.8px',color:'#7A7060',borderBottom:'1px solid #E8E2D4'}}>{h}</th>
                   ))}
                 </tr>
